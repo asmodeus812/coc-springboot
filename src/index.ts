@@ -4,10 +4,10 @@ import {
     window,
     workspace,
     ExtensionContext,
-    Uri
 } from 'coc.nvim'
 
 import * as commons from './utils'
+import * as rewrite from './rewrite';
 import { ApiManager } from "./apiManager"
 import { ExtensionAPI } from "./api"
 import { registerJavaDataService, registerClasspathService } from "./utils"
@@ -35,7 +35,7 @@ export function activate(context: ExtensionContext): Thenable<ExtensionAPI> {
         preferJdk: true,
         DEBUG: false,
         vmArgs: [],
-        checkjvm: (context: ExtensionContext, jvm: commons.JVM) => {
+        checkjvm: (_, jvm: commons.JVM) => {
             let version = jvm.getMajorVersion()
             if (version < 17) {
                 throw Error(`Spring Tools Language Server requires Java 17 or higher to be launched. Current Java version is ${version}`)
@@ -48,8 +48,7 @@ export function activate(context: ExtensionContext): Thenable<ExtensionAPI> {
                         if (selection === STOP_ASKING) {
                             options.workspaceOptions.update('checkJVM', false)
                         }
-                    }
-                    )
+                    })
             }
         },
         workspaceOptions: workspace.getConfiguration("spring-boot.ls"),
@@ -114,7 +113,7 @@ export function activate(context: ExtensionContext): Thenable<ExtensionAPI> {
 
         commands.registerCommand('vscode-spring-boot.ls.stop', () => client.stop())
         // liveHoverUi.activate(client, options, context);
-        // rewrite.activate(client, options, context);
+        rewrite.activate(client, options, context);
         startPropertiesConversionSupport(context)
         registerMiscCommands(context)
 

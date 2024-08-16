@@ -141,8 +141,8 @@ export async function activate(options: ActivatorOptions, context: coc.Extension
     let location: string = getUserDefinedLsDirectory(options, context)
 
     if (options.CONNECT_TO_LS) {
-        const _ = await coc.window.showInformationMessage("Connecting to spring-boot language server")
-        return await connectToLS(location, context, options)
+        await coc.window.showInformationMessage("Connecting to spring boot language server")
+        return await connectToLS(location, options)
     } else {
         const clientOptions = options.clientOptions
         clientOptions.outputChannel = initLogOutput(context)
@@ -169,9 +169,9 @@ export async function activate(options: ActivatorOptions, context: coc.Extension
         clientOptions?.outputChannel?.appendLine("Found java executable: " + javaExecutablePath)
         clientOptions?.outputChannel?.appendLine("isJavaEightOrHigher => true")
         if (process.env['SPRING_LS_USE_SOCKET']) {
-            return setupLanguageClient(location, context, createServerOptionsForPortComm(location, options, context, jvm), options)
+            return setupLanguageClient(location, createServerOptionsForPortComm(location, options, context, jvm), options)
         } else {
-            return setupLanguageClient(location, context, createServerOptions(location, options, context, jvm), options)
+            return setupLanguageClient(location, createServerOptions(location, options, context, jvm), options)
         }
     }
 }
@@ -299,7 +299,7 @@ function hasVmArg(argPrefix: string, vmargs?: string[]): boolean {
     return false
 }
 
-function findServerJar(jarsDir): string {
+function findServerJar(jarsDir: any): string {
     let serverJars = FS.readdirSync(jarsDir).filter(jar =>
         jar.indexOf('language-server') >= 0 &&
         jar.endsWith(".jar")
@@ -313,7 +313,7 @@ function findServerJar(jarsDir): string {
     return Path.resolve(jarsDir, serverJars[0])
 }
 
-function connectToLS(location, context: coc.ExtensionContext, options: ActivatorOptions): Promise<LanguageClient> {
+function connectToLS(location: string, options: ActivatorOptions): Promise<LanguageClient> {
     let connectionInfo = {
         port: 5007
     }
@@ -327,10 +327,11 @@ function connectToLS(location, context: coc.ExtensionContext, options: Activator
         return Promise.resolve(result)
     }
 
-    return setupLanguageClient(location, context, serverOptions, options)
+    console.log(`Connecting to spring boot language server on port ${connectionInfo.port}`)
+    return setupLanguageClient(location, serverOptions, options)
 }
 
-function setupLanguageClient(location: string, context: coc.ExtensionContext, createServer: ServerOptions, options: ActivatorOptions): Promise<LanguageClient> {
+function setupLanguageClient(location: string, createServer: ServerOptions, options: ActivatorOptions): Promise<LanguageClient> {
     let client = new LanguageClient(options.extensionId, options.extensionId,
         createServer, options.clientOptions)
 
