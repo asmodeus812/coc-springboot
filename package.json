@@ -13,7 +13,8 @@
     "scripts": {
         "watch": "node esbuild.mjs --watch",
         "build": "node esbuild.mjs",
-        "prepare": "node esbuild.mjs"
+        "prepare": "node esbuild.mjs",
+        "install": "./build.sh"
     },
     "devDependencies": {
         "@types/fs-extra": "^8.0.0",

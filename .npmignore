@@ -11,3 +11,10 @@ yarn-error.log
 .github
 .eslintrc.js
 .prettierrc
+sts4/**/*
+language-server/
+jars/
+
+!!sts4/headless-services/spring-boot-language-server/
+!!sts4/headless-services/jdt-ls-extension/
+!!sts4/headless-services/xml-ls-extension/

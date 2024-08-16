@@ -1,5 +1,6 @@
 'use strict'
 import {
+    services,
     commands,
     window,
     workspace,
@@ -24,11 +25,11 @@ const STOP_ASKING = "Stop Asking"
 
 export function activate(context: ExtensionContext): Thenable<ExtensionAPI> {
     let options: commons.ActivatorOptions = {
-        explodedLsJarData: {
-            lsLocation: 'language-server',
-            configFileName: 'application.properties',
-            mainClass: 'org.springframework.ide.vscode.boot.app.BootLanguageServerBootApp',
-        },
+        // explodedLsJarData: {
+        //     lsLocation: 'language-server',
+        //     configFileName: 'application.properties',
+        //     mainClass: 'org.springframework.ide.vscode.boot.app.BootLanguageServerBootApp',
+        // },
         extensionId: 'springboot',
         CONNECT_TO_LS: false,
         jvmHeap: '1024m',
@@ -107,12 +108,12 @@ export function activate(context: ExtensionContext): Thenable<ExtensionAPI> {
     return commons.activate(options, context).then(client => {
         // @Note that the name of this command is hard coded in the spring boot extensions and is expected to be exactly - vscode-spring-boot.ls.start
         commands.registerCommand('vscode-spring-boot.ls.start', () => client.start().then(() => {
+            console.log(`Starting spring-boot server`)
+            services.registerLanguageClient(client)
             registerClasspathService(client)
             registerJavaDataService(client)
         }))
-
         commands.registerCommand('vscode-spring-boot.ls.stop', () => client.stop())
-        // liveHoverUi.activate(client, options, context);
         rewrite.activate(client, options, context);
         startPropertiesConversionSupport(context)
         registerMiscCommands(context)

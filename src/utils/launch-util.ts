@@ -146,7 +146,6 @@ export async function activate(options: ActivatorOptions, context: coc.Extension
     } else {
         const clientOptions = options.clientOptions
         clientOptions.outputChannel = initLogOutput(context)
-        clientOptions.outputChannel.appendLine("Starting spring-boot language server")
 
         let finder = options.preferJdk ? findJdk : findJvm
         let home: string | undefined = getSpringUserDefinedJavaHome(options.workspaceOptions, clientOptions?.outputChannel)
@@ -200,24 +199,24 @@ function createServerOptionsForPortComm(location: string, options: ActivatorOpti
                         writer: socket
                     })
                 }).listen(port, () => {
-                        let processLaunchoptions = {
-                            cwd: coc.workspace.root
-                        }
-                        const args = prepareJvmArgs(location, options, context, jvm, port)
-                        if (options.explodedLsJarData) {
-                            const explodedLsJarData = options.explodedLsJarData
-                            const lsRoot = Path.resolve(location, explodedLsJarData.lsLocation)
+                    let processLaunchoptions = {
+                        cwd: coc.workspace.root
+                    }
+                    const args = prepareJvmArgs(location, options, context, jvm, port)
+                    if (options.explodedLsJarData) {
+                        const explodedLsJarData = options.explodedLsJarData
+                        const lsRoot = Path.resolve(location, explodedLsJarData.lsLocation)
 
-                            const classpath: string[] = []
-                            classpath.push(Path.resolve(lsRoot, 'BOOT-INF/classes'))
-                            classpath.push(`${Path.resolve(lsRoot, 'BOOT-INF/lib')}${Path.sep}*`)
+                        const classpath: string[] = []
+                        classpath.push(Path.resolve(lsRoot, 'BOOT-INF/classes'))
+                        classpath.push(`${Path.resolve(lsRoot, 'BOOT-INF/lib')}${Path.sep}*`)
 
-                            jvm.mainClassLaunch(explodedLsJarData.mainClass, classpath, args, processLaunchoptions)
-                        } else {
-                            const launcher = findServerJar(Path.resolve(location, 'language-server'))
-                            jvm.jarLaunch(launcher, args, processLaunchoptions)
-                        }
-                    })
+                        jvm.mainClassLaunch(explodedLsJarData.mainClass, classpath, args, processLaunchoptions)
+                    } else {
+                        const launcher = findServerJar(Path.resolve(location, 'language-server'))
+                        jvm.jarLaunch(launcher, args, processLaunchoptions)
+                    }
+                })
             })
         })
 }
@@ -332,12 +331,8 @@ function connectToLS(location: string, options: ActivatorOptions): Promise<Langu
 }
 
 function setupLanguageClient(location: string, createServer: ServerOptions, options: ActivatorOptions): Promise<LanguageClient> {
-    let client = new LanguageClient(options.extensionId, options.extensionId,
-        createServer, options.clientOptions)
-
-    console.log(`Starting spring-boot from directory ${location}`)
-    logToSpringBootOutput(`Spring-boot starting from ${location}`)
-    coc.services.registerLanguageClient(client)
+    let client = new LanguageClient(options.extensionId, options.extensionId, createServer, options.clientOptions)
+    logToSpringBootOutput(`Registered spring boot language server resources for ${location}`)
 
     if (options.TRACE) {
         client.trace = coc.Trace.Verbose
