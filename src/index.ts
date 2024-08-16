@@ -1,5 +1,6 @@
 'use strict'
 import {
+    nvim,
     services,
     commands,
     window,
@@ -8,7 +9,7 @@ import {
 } from 'coc.nvim'
 
 import * as commons from './utils'
-import * as rewrite from './rewrite';
+import * as rewrite from './rewrite'
 import { ApiManager } from "./apiManager"
 import { ExtensionAPI } from "./api"
 import { registerJavaDataService, registerClasspathService } from "./utils"
@@ -109,12 +110,52 @@ export function activate(context: ExtensionContext): Thenable<ExtensionAPI> {
         // @Note that the name of this command is hard coded in the spring boot extensions and is expected to be exactly - vscode-spring-boot.ls.start
         commands.registerCommand('vscode-spring-boot.ls.start', () => client.start().then(() => {
             console.log(`Starting spring-boot server`)
+
+            // TODO: workaround with filetypes for https://github.com/neoclide/coc.nvim/issues/5112,
+            // other language servers which rely on the correct ft will not work, namely - yaml/yml
+            workspace.registerAutocmd({
+                event: ["BufRead", "BufNewFile"],
+                callback: async () => {
+                    await nvim.exec(`set ft=${YAML_LANGUAGE_ID}`)
+                    await nvim.exec("setl syntax=yaml")
+                },
+                pattern: "application*.yml,bootstrap*.yml,application*.yaml,bootstrap*.yaml"
+            })
+
+            workspace.registerAutocmd({
+                event: ["BufRead", "BufNewFile"],
+                callback: async () => {
+                    await nvim.exec(`set ft=${PROPERTIES_LANGUAGE_ID}`)
+                    await nvim.exec("setl syntax=jproperties")
+                },
+                pattern: "application*.properties,bootstrap*.properties"
+            })
+
+            workspace.registerAutocmd({
+                event: ["BufRead", "BufNewFile"],
+                callback: async () => {
+                    await nvim.exec(`set ft=${FACTORIES_LANGUAGE_ID}`)
+                    await nvim.exec("setl syntax=jproperties")
+                },
+                pattern: "spring*.factories"
+            })
+
+            workspace.registerAutocmd({
+                event: ["BufRead", "BufNewFile"],
+                callback: async () => {
+                    await nvim.exec(`set ft=${JPA_QUERY_PROPERTIES_LANGUAGE_ID}`)
+                    await nvim.exec("setl syntax=jproperties")
+                },
+                pattern: "jpa*.properties"
+            })
+
             services.registerLanguageClient(client)
             registerClasspathService(client)
             registerJavaDataService(client)
+
         }))
         commands.registerCommand('vscode-spring-boot.ls.stop', () => client.stop())
-        rewrite.activate(client, options, context);
+        rewrite.activate(client, options, context)
         startPropertiesConversionSupport(context)
         registerMiscCommands(context)
 

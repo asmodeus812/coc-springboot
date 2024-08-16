@@ -203,7 +203,14 @@ function createServerOptionsForPortComm(location: string, options: ActivatorOpti
                         cwd: coc.workspace.root
                     }
                     const args = prepareJvmArgs(location, options, context, jvm, port)
-                    if (options.explodedLsJarData) {
+                    const launcher = findServerJar(Path.resolve(location, 'language-server'))
+                    if (!launcher) {
+                        logToSpringBootOutput(`Unable to locate language server jars under working directory ${location}, falling back to exploded jar resolution`)
+                        options.explodedLsJarData = {
+                            lsLocation: 'language-server',
+                            configFileName: 'application.properties',
+                            mainClass: 'org.springframework.ide.vscode.boot.app.BootLanguageServerBootApp',
+                        }
                         const explodedLsJarData = options.explodedLsJarData
                         const lsRoot = Path.resolve(location, explodedLsJarData.lsLocation)
 
@@ -213,7 +220,6 @@ function createServerOptionsForPortComm(location: string, options: ActivatorOpti
 
                         jvm.mainClassLaunch(explodedLsJarData.mainClass, classpath, args, processLaunchoptions)
                     } else {
-                        const launcher = findServerJar(Path.resolve(location, 'language-server'))
                         jvm.jarLaunch(launcher, args, processLaunchoptions)
                     }
                 })
@@ -269,7 +275,14 @@ function prepareJvmArgs(location: string, options: ActivatorOptions, context: co
 }
 
 function addCpAndLauncherToJvmArgs(location: string, args: string[], options: ActivatorOptions, context: coc.ExtensionContext) {
-    if (options.explodedLsJarData) {
+    const launcher = findServerJar(Path.resolve(location, 'language-server'))
+    if (!launcher) {
+        logToSpringBootOutput(`Unable to locate language server jars under working directory ${location}, falling back to exploded jar resolution`)
+        options.explodedLsJarData = {
+            lsLocation: 'language-server',
+            configFileName: 'application.properties',
+            mainClass: 'org.springframework.ide.vscode.boot.app.BootLanguageServerBootApp',
+        }
         const explodedLsJarData = options.explodedLsJarData
         const lsRoot = Path.resolve(location, explodedLsJarData.lsLocation)
 
@@ -282,7 +295,6 @@ function addCpAndLauncherToJvmArgs(location: string, args: string[], options: Ac
         args.push(explodedLsJarData.mainClass)
     } else {
         args.push('-jar')
-        const launcher = findServerJar(Path.resolve(location, 'language-server'))
         args.push(launcher)
     }
 }
@@ -298,13 +310,13 @@ function hasVmArg(argPrefix: string, vmargs?: string[]): boolean {
     return false
 }
 
-function findServerJar(jarsDir: any): string {
+function findServerJar(jarsDir: any): string | undefined {
     let serverJars = FS.readdirSync(jarsDir).filter(jar =>
         jar.indexOf('language-server') >= 0 &&
         jar.endsWith(".jar")
     )
     if (serverJars.length == 0) {
-        throw new Error("Server jar not found in " + jarsDir)
+        return undefined
     }
     if (serverJars.length > 1) {
         throw new Error("Multiple server jars found in " + jarsDir)
