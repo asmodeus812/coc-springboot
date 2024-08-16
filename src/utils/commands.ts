@@ -1,7 +1,5 @@
 'use strict';
-
 import * as coc from 'coc.nvim';
-// import {Position} from 'vscode-languageclient';
 
 export function registerCommands(context: coc.ExtensionContext) {
     registerOpenUrl(context, "sts.open.url");
@@ -16,9 +14,6 @@ function registerOpenUrl(context: coc.ExtensionContext, commandId: string) {
 
 function registerShowHoverAtPosition(context: coc.ExtensionContext, commandId: string) {
     coc.commands.registerCommand(commandId, () => {
-        // const editor = coc.window.activeTextEditor;
-        // const vsPosition = new coc.Position(position.line, position.character);
-        // editor.selection = new coc.Selection(vsPosition, vsPosition);
         coc.commands.executeCommand('editor.action.showHover');
     });
 }

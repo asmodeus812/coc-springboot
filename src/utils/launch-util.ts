@@ -11,6 +11,7 @@ import {
 import { getJavaExtension } from './classpath'
 import { logToSpringBootOutput, initLogOutput } from './logging'
 import { JVM, findJvm, findJdk } from '@pivotal-tools/jvm-launch-utils'
+import { abort } from 'process'
 
 const LOG_RESOLVE_VM_ARG_PREFIX = '-Xlog:jni+resolve='
 const DEBUG_ARG = '-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=y'
@@ -68,6 +69,26 @@ function getUserDefinedJvmArgs(wsOpts: coc.WorkspaceConfiguration): string[] {
     return javaOptions?.vmargs ? [...javaOptions.vmargs] : dflt
 }
 
+function getUserDefinedLsDirectory(options: ActivatorOptions, context: coc.ExtensionContext): string {
+    let location: string | undefined = options.workspaceOptions.get("directory")
+    location = !location || !FS.existsSync(location) ? context.extensionPath : location
+
+    if (location) {
+        location = coc.workspace.expand(location)
+        if (!FS.existsSync(location)) {
+            logToSpringBootOutput(
+                `Spring boot can not start, invalid or non existent path was detected ${location}`,
+            )
+            coc.window.showErrorMessage(`Spring boot not found, check springboot output`)
+            abort()
+        }
+    } else {
+        coc.window.showErrorMessage(`Spring boot binaries directory could not be resolved at all`)
+        abort()
+    }
+    return location
+}
+
 function getSpringUserDefinedJavaHome(wsOpts: coc.WorkspaceConfiguration, log: coc.OutputChannel): string | undefined {
     let javaHome: string | undefined = undefined
     if (wsOpts) {
@@ -117,9 +138,11 @@ function findJdtEmbeddedJRE(): string | undefined {
 }
 
 export async function activate(options: ActivatorOptions, context: coc.ExtensionContext): Promise<LanguageClient> {
+    let location: string = getUserDefinedLsDirectory(options, context)
+
     if (options.CONNECT_TO_LS) {
         const _ = await coc.window.showInformationMessage("Connecting to spring-boot language server")
-        return await connectToLS(context, options)
+        return await connectToLS(location, context, options)
     } else {
         const clientOptions = options.clientOptions
         clientOptions.outputChannel = initLogOutput(context)
@@ -146,57 +169,52 @@ export async function activate(options: ActivatorOptions, context: coc.Extension
         clientOptions?.outputChannel?.appendLine("Found java executable: " + javaExecutablePath)
         clientOptions?.outputChannel?.appendLine("isJavaEightOrHigher => true")
         if (process.env['SPRING_LS_USE_SOCKET']) {
-            return setupLanguageClient(context, createServerOptionsForPortComm(options, context, jvm), options)
+            return setupLanguageClient(location, context, createServerOptionsForPortComm(location, options, context, jvm), options)
         } else {
-            return setupLanguageClient(context, createServerOptions(options, context, jvm), options)
+            return setupLanguageClient(location, context, createServerOptions(location, options, context, jvm), options)
         }
     }
 }
 
-function createServerOptions(options: ActivatorOptions, context: coc.ExtensionContext, jvm: JVM, port?: number): Executable {
+function createServerOptions(location: string, options: ActivatorOptions, context: coc.ExtensionContext, jvm: JVM, port?: number): Executable {
     const executable: Executable = Object.create(null)
     const execOptions: ExecutableOptions = Object.create(null)
     execOptions.env = Object.assign(process.env)
-    // execOptions.cwd = VSCode.workspace.rootPath
     executable.options = execOptions
     executable.command = jvm.getJavaExecutable()
-    const vmArgs = prepareJvmArgs(options, context, jvm, port)
-    addCpAndLauncherToJvmArgs(vmArgs, options, context)
+    const vmArgs = prepareJvmArgs(location, options, context, jvm, port)
+    addCpAndLauncherToJvmArgs(location, vmArgs, options, context)
     executable.args = vmArgs
     return executable
-
 }
 
-function createServerOptionsForPortComm(options: ActivatorOptions, context: coc.ExtensionContext, jvm: JVM): ServerOptions {
+function createServerOptionsForPortComm(location: string, options: ActivatorOptions, context: coc.ExtensionContext, jvm: JVM): ServerOptions {
+
     return () =>
         new Promise((resolve) => {
-            PortFinder.getPort((err, port) => {
+            PortFinder.getPort((_, port) => {
                 Net.createServer(socket => {
                     options.clientOptions?.outputChannel?.appendLine('Child process connected on port ' + port)
-
                     resolve({
                         reader: socket,
                         writer: socket
                     })
-                })
-                    .listen(port, () => {
+                }).listen(port, () => {
                         let processLaunchoptions = {
                             cwd: coc.workspace.root
                         }
-                        const args = prepareJvmArgs(options, context, jvm, port)
+                        const args = prepareJvmArgs(location, options, context, jvm, port)
                         if (options.explodedLsJarData) {
                             const explodedLsJarData = options.explodedLsJarData
-                            const lsRoot = Path.resolve(context.extensionPath, explodedLsJarData.lsLocation)
+                            const lsRoot = Path.resolve(location, explodedLsJarData.lsLocation)
 
-                            // Add classpath
                             const classpath: string[] = []
                             classpath.push(Path.resolve(lsRoot, 'BOOT-INF/classes'))
                             classpath.push(`${Path.resolve(lsRoot, 'BOOT-INF/lib')}${Path.sep}*`)
 
                             jvm.mainClassLaunch(explodedLsJarData.mainClass, classpath, args, processLaunchoptions)
                         } else {
-                            // Start the child java process
-                            const launcher = findServerJar(Path.resolve(context.extensionPath, 'language-server'))
+                            const launcher = findServerJar(Path.resolve(location, 'language-server'))
                             jvm.jarLaunch(launcher, args, processLaunchoptions)
                         }
                     })
@@ -204,7 +222,7 @@ function createServerOptionsForPortComm(options: ActivatorOptions, context: coc.
         })
 }
 
-function prepareJvmArgs(options: ActivatorOptions, context: coc.ExtensionContext, jvm: JVM, port?: number): string[] {
+function prepareJvmArgs(location: string, options: ActivatorOptions, context: coc.ExtensionContext, jvm: JVM, port?: number): string[] {
     const DEBUG = options.DEBUG
     const jvmHeap = getUserDefinedJvmHeap(options.workspaceOptions, options.jvmHeap)
     const jvmArgs = getUserDefinedJvmArgs(options.workspaceOptions)
@@ -213,7 +231,7 @@ function prepareJvmArgs(options: ActivatorOptions, context: coc.ExtensionContext
     }
 
     let logfile: string = options.workspaceOptions.get("logfile") || "/dev/null"
-    //The logfile = '/dev/null' is handled specifically by the language server process so it works on all OSs.
+    //The logfile = '/dev/null' is handled specifically by the language server process
     options.clientOptions?.outputChannel?.appendLine('Redirecting server logs to ' + logfile)
     const args = [
         '-Dsts.lsp.client=vscode',
@@ -243,7 +261,7 @@ function prepareJvmArgs(options: ActivatorOptions, context: coc.ExtensionContext
 
     if (options.explodedLsJarData) {
         const explodedLsJarData = options.explodedLsJarData
-        const lsRoot = Path.resolve(context.extensionPath, explodedLsJarData.lsLocation)
+        const lsRoot = Path.resolve(location, explodedLsJarData.lsLocation)
         if (explodedLsJarData.configFileName) {
             args.push(`-Dspring.config.location=file:${Path.resolve(lsRoot, `BOOT-INF/classes/${explodedLsJarData.configFileName}`)}`)
         }
@@ -251,24 +269,21 @@ function prepareJvmArgs(options: ActivatorOptions, context: coc.ExtensionContext
     return args
 }
 
-function addCpAndLauncherToJvmArgs(args: string[], options: ActivatorOptions, context: coc.ExtensionContext) {
+function addCpAndLauncherToJvmArgs(location: string, args: string[], options: ActivatorOptions, context: coc.ExtensionContext) {
     if (options.explodedLsJarData) {
         const explodedLsJarData = options.explodedLsJarData
-        const lsRoot = Path.resolve(context.extensionPath, explodedLsJarData.lsLocation)
+        const lsRoot = Path.resolve(location, explodedLsJarData.lsLocation)
 
-        // Add classpath
         const classpath: string[] = []
         classpath.push(Path.resolve(lsRoot, 'BOOT-INF/classes'))
         classpath.push(`${Path.resolve(lsRoot, 'BOOT-INF/lib')}${Path.sep}*`)
-
 
         args.unshift(classpath.join(Path.delimiter))
         args.unshift('-cp')
         args.push(explodedLsJarData.mainClass)
     } else {
-        // Start the child java process
         args.push('-jar')
-        const launcher = findServerJar(Path.resolve(context.extensionPath, 'language-server'))
+        const launcher = findServerJar(Path.resolve(location, 'language-server'))
         args.push(launcher)
     }
 }
@@ -298,7 +313,7 @@ function findServerJar(jarsDir): string {
     return Path.resolve(jarsDir, serverJars[0])
 }
 
-function connectToLS(context: coc.ExtensionContext, options: ActivatorOptions): Promise<LanguageClient> {
+function connectToLS(location, context: coc.ExtensionContext, options: ActivatorOptions): Promise<LanguageClient> {
     let connectionInfo = {
         port: 5007
     }
@@ -312,15 +327,15 @@ function connectToLS(context: coc.ExtensionContext, options: ActivatorOptions): 
         return Promise.resolve(result)
     }
 
-    return setupLanguageClient(context, serverOptions, options)
+    return setupLanguageClient(location, context, serverOptions, options)
 }
 
-function setupLanguageClient(context: coc.ExtensionContext, createServer: ServerOptions, options: ActivatorOptions): Promise<LanguageClient> {
-    // Create the language client and start the client.
+function setupLanguageClient(location: string, context: coc.ExtensionContext, createServer: ServerOptions, options: ActivatorOptions): Promise<LanguageClient> {
     let client = new LanguageClient(options.extensionId, options.extensionId,
         createServer, options.clientOptions)
 
-    logToSpringBootOutput("Registering springboot language server")
+    console.log(`Starting spring-boot from directory ${location}`)
+    logToSpringBootOutput(`Spring-boot starting from ${location}`)
     coc.services.registerLanguageClient(client)
 
     if (options.TRACE) {

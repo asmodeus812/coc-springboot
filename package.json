@@ -62,45 +62,38 @@
         ],
         "commands": [
             {
-                "command": "vscode-spring-boot.rewrite.list.boot-upgrades",
+                "command": "springboot.rewrite.list.boot-upgrades",
                 "category": "Spring Boot",
                 "title": "Upgrade Spring Boot Version..."
             },
             {
-                "command": "vscode-spring-boot.rewrite.list.refactorings",
+                "command": "springboot.rewrite.list.refactorings",
                 "category": "Spring Boot",
                 "title": "Refactor Spring Boot Project..."
             },
             {
-                "command": "sts/common-properties/reload",
-                "title": "Reload Shared Properties Metadata",
-                "category": "Spring Boot"
+                "command": "springboot.properties.reload",
+                "title": "Reload Shared Properties Metadata"
             },
             {
-                "command": "vscode-spring-boot.spring.modulith.metadata.refresh",
-                "title": "Refresh Modulith Metadata",
-                "category": "Spring Boot"
+                "command": "springboot.spring.modulith.metadata.refresh",
+                "title": "Refresh Modulith Metadata"
             },
             {
-                "command": "vscode-spring-boot.set.log-levels",
-                "title": "Set Log Levels",
-                "category": "Spring Boot"
+                "command": "springboot.set.log-levels",
+                "title": "Set Log Levels"
             },
             {
-                "command": "vscode-spring-boot.open.url",
-                "title": "Open Boot App Page URL",
-                "category": "Spring Boot",
-                "enablement": "never"
+                "command": "springboot.open.url",
+                "title": "Open Boot App Page URL"
             },
             {
-                "command": "vscode-spring-boot.props-to-yaml",
-                "title": "Convert .properties to .yaml",
-                "category": "Spring Boot"
+                "command": "springboot.props-to-yaml",
+                "title": "Convert .properties to .yaml"
             },
             {
-                "command": "vscode-spring-boot.yaml-to-props",
-                "title": "Convert .yaml to .properties",
-                "category": "Spring Boot"
+                "command": "springboot.yaml-to-props",
+                "title": "Convert .yaml to .properties"
             }
         ],
         "configuration": [
@@ -225,20 +218,6 @@
                         "type": "boolean",
                         "default": false,
                         "description": "Replace converted properties file"
-                    },
-                    "spring.tools.openWith": {
-                        "default": "integrated",
-                        "type": "string",
-                        "enum": [
-                            "integrated",
-                            "external"
-                        ],
-                        "enumDescriptions": [
-                            "VS Code's integrated browser",
-                            "External default browser"
-                        ],
-                        "scope": "window",
-                        "description": "Defines which browser to use when opening Spring Boot apps web pages."
                     }
                 }
             },
@@ -292,6 +271,13 @@
                             "null"
                         ],
                         "description": "The path of a file to write language server logs. If not set or null, then logs are discarded."
+                    },
+                    "spring-boot.ls.directory": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Specifies the directory for where to spring boot and its extensions, the directory must contain two folders, a language-server/ and jars/, where the server is located in the language-server/ folder and all extension binaries are located in the jars/ folder"
                     },
                     "spring-boot.ls.java.home": {
                         "type": [

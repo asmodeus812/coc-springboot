@@ -3,10 +3,18 @@
 Coc spring boot extension and Language Server providing support for working with Spring Boot
 `application.properties`, `application.yml` and `.java` files.
 
-# Usage:
+# Usage
 
 The extension will automatically activate when you edit files with the following
 name patterns:
+
+This extension also provides a custom root directory where the spring boot binaries are to be found, in case you do not desire to use the one bundled with this extension
+
+```json
+{
+    "spring-boot.ls.directly": "/home/yourname/springboot"
+}
+```
 
 You can also define your own patterns and map them to the language-ids
 `spring-boot-properties` or `spring-boot-properties-yaml`
@@ -25,6 +33,11 @@ Easy navigation to Spring-specific elements of your source code.
 * `@>`                 shows all functions (prototype implementation)
 * `@`                  shows all Spring annotations in the code
 * `//`                 shows all request mappings of all running Spring Boot apps and opens a browser for the selected endpoint
+
+Easy navigation to Spring-specific elements of your source code.
+* `@Prpofile`:          shows information about the active profiles on the running apps
+* `@Component`,        `@Bean`, `@Autowired`: shows detailed information about the beans and their wiring from the live app
+* `@ConditionalOn...`: shows information about the conditions and their evaluation at runtime
 
 ## Code templates
 

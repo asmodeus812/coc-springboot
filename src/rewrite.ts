@@ -203,28 +203,27 @@ function selectItemRecursively(i: RecipeQuickPickItem, isSelectedItem: boolean) 
     }
 }
 
-/** Called when extension is activated */
 export function activate(
     client: LanguageClient,
     options: ActivatorOptions,
     context: coc.ExtensionContext
 ) {
     context.subscriptions.push(
-        coc.commands.registerCommand('vscode-spring-boot.rewrite.list.boot-upgrades', param => {
+        coc.commands.registerCommand('springboot.rewrite.list.boot-upgrades', param => {
             if (client.started) {
                 return showRefactorings(param, BOOT_UPGRADE);
             } else {
                 coc.window.showErrorMessage("No Spring Boot project found. Action is only available for Spring Boot Projects");
             }
         }),
-        coc.commands.registerCommand('vscode-spring-boot.rewrite.list.refactorings', param => {
+        coc.commands.registerCommand('springboot.rewrite.list.refactorings', param => {
             if (client.started) {
                 return showRefactorings(param, OTHER_REFACTORINGS);
             } else {
                 coc.window.showErrorMessage("No Spring Boot project found. Action is only available for Spring Boot Projects");
             }
         }),
-        coc.commands.registerCommand('vscode-spring-boot.rewrite.reload', () => {
+        coc.commands.registerCommand('springboot.rewrite.reload', () => {
             if (client.started) {
                 return coc.commands.executeCommand('sts/rewrite/reload');
             } else {

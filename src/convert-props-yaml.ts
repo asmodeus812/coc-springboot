@@ -4,7 +4,7 @@ import {ExtensionContext, Uri, commands, window, workspace} from "coc.nvim";
 
 export function startPropertiesConversionSupport(extension: ExtensionContext) {
     extension.subscriptions.push(
-        commands.registerCommand('vscode-spring-boot.props-to-yaml', async (uri) => {
+        commands.registerCommand('springboot.props-to-yaml', async (uri) => {
             if (!uri && window.activeTextEditor) {
                 const activeUri = window.activeTextEditor.document.uri;
                 if (".properties" === path.extname(activeUri)) {
@@ -17,7 +17,7 @@ export function startPropertiesConversionSupport(extension: ExtensionContext) {
             return await commands.executeCommand("sts/boot/props-to-yaml", uri.toString(), Uri.file(getTargetFile(uri.path, "yml")).toString(), shouldReplace());
         }),
 
-        commands.registerCommand('vscode-spring-boot.yaml-to-props', async (uri) => {
+        commands.registerCommand('springboot.yaml-to-props', async (uri) => {
             if (!uri && window.activeTextEditor) {
                 const activeUri = window.activeTextEditor.document.uri;
                 const ext = path.extname(activeUri)

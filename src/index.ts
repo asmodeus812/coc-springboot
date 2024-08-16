@@ -22,7 +22,6 @@ const JPA_QUERY_PROPERTIES_LANGUAGE_ID = "jpa-query-properties"
 
 const STOP_ASKING = "Stop Asking"
 
-/** Called when extension is activated */
 export function activate(context: ExtensionContext): Thenable<ExtensionAPI> {
     let options: commons.ActivatorOptions = {
         explodedLsJarData: {
@@ -58,6 +57,11 @@ export function activate(context: ExtensionContext): Thenable<ExtensionAPI> {
             markdown: {
                 isTrusted: true
             },
+            disabledFeatures: [
+                // TODO: coc does not handle multiple symbol providing clients
+                "documentHighlight",
+                "documentSymbol"
+            ],
             documentSelector: [
                 {
                     language: PROPERTIES_LANGUAGE_ID,
@@ -78,15 +82,15 @@ export function activate(context: ExtensionContext): Thenable<ExtensionAPI> {
                 {
                     language: XML_LANGUAGE_ID,
                     scheme: 'file'
-                }
-                // {
-                //     language: JAVA_LANGUAGE_ID,
-                //     scheme: 'file'
-                // },
-                // {
-                //     language: JAVA_LANGUAGE_ID,
-                //     scheme: 'jdt'
-                // },
+                },
+                {
+                    language: JAVA_LANGUAGE_ID,
+                    scheme: 'file'
+                },
+                {
+                    language: JAVA_LANGUAGE_ID,
+                    scheme: 'jdt'
+                },
             ],
             synchronize: {
                 configurationSection: ['boot-java', 'spring-boot', 'http']
@@ -94,29 +98,18 @@ export function activate(context: ExtensionContext): Thenable<ExtensionAPI> {
             initializationOptions: () => ({
                 workspaceFolders: workspace.workspaceFolders ? workspace.workspaceFolders.map(f => f.uri.toString()) : null,
                 // Do not enable JDT classpath listeners at the startup - classpath service would enable it later if needed based on the Java extension mode
-                // Classpath service registration requires commands to be registered and Boot LS needs to register classpath 
+                // Classpath service registration requires commands to be registered and Boot LS needs to register classpath
                 // listeners when client has callbacks for STS4 extension java related messages registered via JDT classpath and Data Service registration
                 enableJdtClasspath: false
             })
-        },
-        highlightCodeLensSettingKey: 'boot-java.highlight-codelens.on'
+        }
     }
 
-    // Register launch config contributior to java debug launch to be able to connect to JMX
-    // context.subscriptions.push(startDebugSupport());
-
     return commons.activate(options, context).then(client => {
+        // @Note that the name of this command is hard coded in the spring boot extensions and is expected to be exactly - vscode-spring-boot.ls.start
         commands.registerCommand('vscode-spring-boot.ls.start', () => client.start().then(() => {
-            // Boot LS is fully started
             registerClasspathService(client)
             registerJavaDataService(client)
-
-            // Force classpath listener to be enabled. Boot LS can only be launched if 
-            // classpath is available and there Spring-Boot on the classpath somewhere.
-            commands.executeCommand('sts.vscode-spring-boot.enableClasspathListening', true)
-
-            // Register TestJars launch support
-            // context.subscriptions.push(startTestJarSupport());
         }))
 
         commands.registerCommand('vscode-spring-boot.ls.stop', () => client.stop())
@@ -131,7 +124,7 @@ export function activate(context: ExtensionContext): Thenable<ExtensionAPI> {
 
 function registerMiscCommands(context: ExtensionContext) {
     context.subscriptions.push(
-        commands.registerCommand('vscode-spring-boot.spring.modulith.metadata.refresh', async () => {
+        commands.registerCommand('springboot.spring.modulith.metadata.refresh', async () => {
             const modulithProjects: any = await commands.executeCommand('sts/modulith/projects')
             const projectNames: any[] = Object.keys(modulithProjects)
             if (projectNames.length === 0) {
@@ -145,10 +138,16 @@ function registerMiscCommands(context: ExtensionContext) {
             }
         }),
 
-        commands.registerCommand('vscode-spring-boot.open.url', (openUrl) => {
-            const openWithExternalBrowser = workspace.getConfiguration("spring.tools").get("openWith") === "external"
-            const browserCommand = openWithExternalBrowser ? "vscode.open" : "simpleBrowser.api.open"
-            return commands.executeCommand(browserCommand, Uri.parse(openUrl))
+        commands.registerCommand('springboot.open.url', async (openUrl) => {
+            window.showInformationMessage(`Opening ${openUrl} with browser`)
+            return workspace.nvim.call('coc#ui#open_url', [openUrl], true)
+        }),
+
+        commands.registerCommand('springboot.properties.reload', async () => {
+            const relaodOutput = await commands.executeCommand("sts/common-properties/reload")
+            if (relaodOutput) {
+                window.showInformationMessage('Reloading common properties metadata')
+            }
         }),
     )
 }
