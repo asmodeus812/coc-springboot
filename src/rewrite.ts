@@ -4,14 +4,23 @@ import * as path from "path"
 
 const BOOT_UPGRADE = 'BOOT_UPGRADE'
 const OTHER_REFACTORINGS = 'NON_BOOT_UPGRADE'
-let quickPick: coc.QuickPick<RecipeQuickPickItem>
 
 const RECIPE_PICK_ACTIONS: RecipeQuickPickItem[] = [
+    {
+        id: 'exit',
+        label: "Close",
+        description: "Exit the receipes picker without action",
+        selected: false,
+        picked: false,
+        action: 'exit',
+        children: undefined,
+    },
     {
         id: 'root',
         label: "Initial",
         description: "Navigate to the base list of receipes",
         selected: false,
+        picked: false,
         action: 'root',
         children: undefined,
     },
@@ -20,9 +29,10 @@ const RECIPE_PICK_ACTIONS: RecipeQuickPickItem[] = [
         label: "Parent",
         description: "Navigate to the parent of this receipe",
         selected: false,
+        picked: false,
         action: 'parent',
         children: undefined,
-    }
+    },
 ]
 
 interface RecipeDescriptor {
@@ -112,7 +122,7 @@ async function showRefactorings(uri: coc.Uri, filter: string) {
     if (recipeDescriptors.length) {
         coc.commands.executeCommand('sts/rewrite/execute', uri.toString(true), recipeDescriptors, true)
     } else {
-        coc.window.showErrorMessage('No recipes were selected from the list')
+        coc.window.showWarningMessage('No recipes were selected for application from the list')
     }
 }
 
@@ -136,14 +146,14 @@ function convertToQuickPickItem(i: RecipeDescriptor, selected?: boolean): Recipe
 }
 
 async function showCurrentPathQuickPick(itemsPromise: Thenable<RecipeQuickPickItem[]>, itemsPath: RecipeQuickPickItem[]): Promise<RecipeQuickPickItem[]> {
-    if (!quickPick) {
-        quickPick = await coc.window.createQuickPick<RecipeQuickPickItem>()
-        const columns = await coc.nvim.eval("&columns") as number
-        quickPick.width = Math.ceil(columns * 0.70)
-        quickPick.matchOnDescription = true
-        quickPick.canSelectMany = true
-    }
+    coc.window.showInformationMessage("<tab> on item to toggle, <cr> for sub receipes list or action (close, initial, parent)")
+    const quickPick = await coc.window.createQuickPick<RecipeQuickPickItem>()
+    const columns = await coc.nvim.eval("&columns") as number
+
+    quickPick.width = Math.ceil(columns * 0.70)
     quickPick.title = 'Loading Recipes'
+    quickPick.matchOnDescription = true
+    quickPick.canSelectMany = true
     quickPick.value = ""
     quickPick.items = []
     quickPick.loading = true
@@ -163,17 +173,17 @@ async function showCurrentPathQuickPick(itemsPromise: Thenable<RecipeQuickPickIt
             if (itemsPath.length > 0) {
                 currentItems = [...RECIPE_PICK_ACTIONS, ...currentItems]
             } else {
-                currentItems = [...currentItems]
+                currentItems = [RECIPE_PICK_ACTIONS[0], ...currentItems]
             }
 
             setTimeout(() => {
                 quickPick.title = 'Select Recipes'
                 quickPick.items = currentItems
                 quickPick.loading = false
-            }, 175)
+            }, 125)
 
             quickPick.onDidChangeSelection(selected => {
-                if (selected.filter(i => i.action === "root" || i.action === "parent").length > 0) {
+                if (selected.filter(i => !!i.action).length > 0) {
                     return
                 }
                 currentItems.forEach(i => {
@@ -187,14 +197,18 @@ async function showCurrentPathQuickPick(itemsPromise: Thenable<RecipeQuickPickIt
 
             quickPick.onDidFinish((selectedItems) => {
                 const index = quickPick.currIndex
-                quickPick = null
-                if (selectedItems && selectedItems.length > 0) {
-                    resolve(selectedItems)
-                    coc.window.showInformationMessage(`Applying ${selectedItems.length} items from the list of recipes `)
+                const selected = selectedItems?.filter(i => !i.action)
+
+                if (selected && selected.length > 0) {
+                    resolve(selected)
+                    coc.window.showInformationMessage(`Applying ${selected.length} items from the list of recipes `)
                 } else {
                     if (index >= 0 && index < currentItems.length) {
                         const item = currentItems[index]
-                        if (item.action === "root") {
+                        if (item.action === "exit") {
+                            resolve([])
+                        }
+                        else if (item.action === "root") {
                             showCurrentPathQuickPick(Promise.resolve(items), []).then(resolve, reject)
                         } else if (item.action === "parent") {
                             itemsPath.pop()
