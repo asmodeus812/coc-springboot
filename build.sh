@@ -57,6 +57,10 @@ cd "${workdir}"/sts4/headless-services/spring-boot-language-server/target
 server_jar_file=$(find . -name '*-exec.jar')
 java -Djarmode=tools -jar "$server_jar_file" extract --destination "${workdir}"/language-server
 
+cd "${workdir}"/language-server/lib
+rm -rf kotlin-*
+rm -rf rewrite-kotlin-*
+
 cd "${workdir}"/sts4/headless-services/xml-ls-extension
 find . -name "*-sources.jar" -delete
 cp target/*.jar "${workdir}"/jars/xml-ls-extension.jar

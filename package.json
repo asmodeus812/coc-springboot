@@ -1,6 +1,6 @@
 {
     "name": "coc-springboot",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "description": "Coc spring boot language server extension client",
     "license": "MIT",
     "main": "lib/index.js",
@@ -13,8 +13,7 @@
     "scripts": {
         "watch": "node esbuild.mjs --watch",
         "build": "node esbuild.mjs",
-        "prepare": "node esbuild.mjs",
-        "install": "./build.sh"
+        "prepare": "node esbuild.mjs"
     },
     "devDependencies": {
         "@types/fs-extra": "^8.0.0",
@@ -64,12 +63,10 @@
         "commands": [
             {
                 "command": "springboot.rewrite.list.upgrades",
-                "category": "Spring Boot",
                 "title": "Upgrade Spring Boot Version..."
             },
             {
                 "command": "springboot.rewrite.list.refactors",
-                "category": "Spring Boot",
                 "title": "Refactor Spring Boot Project..."
             },
             {

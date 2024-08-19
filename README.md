@@ -8,11 +8,45 @@ Coc spring boot extension and Language Server providing support for working with
 The extension will automatically activate when you edit files with the following
 name patterns:
 
-This extension also provides a custom root directory where the spring boot binaries are to be found, in case you do not desire to use the one bundled with this extension
+The extension by default is bundled with the minimal resources needed to be deployed and started, due to size
+limitations some of the libraries are removed from the final packaging - e.g for not immediately used features for
+`kotlin`
+
+To build your own server binaries checkout the `build.sh` script which uses the locally cloned `sts4` submodule to build
+the language server and corresponding jar bundles. Once you clone the repository do execute the submodule commands below
+to initialize them, and clone any submodules
+
+```sh
+    git submodule init
+    git submodule update
+```
+
+This extension also provides a custom root directory where the spring boot binaries are to be found, in case you do not
+desire to use the one bundled with this extension, note that the folder configured must contain a sub-folder called
+`language-server` where the spring boot tools language server jar and libraries must be located, the extension also
+supports exploded jar format, in case you are using an older packing version of spring boot tools.
 
 ```json
 {
     "spring-boot.ls.directly": "/home/yourname/springboot"
+}
+```
+
+To configure custom set of bundles to be attached to the java language server one must also specify the full
+path/location to the jar extensions, these are also distributed by the spring boot tools. These jars are injected during
+`jdtls` startup and are responsible for the startup and communication between `jdtls` and spring language server
+
+```json
+{
+    "java.jdt.ls.bundles": [
+        "/home/yourname/springboot/jars/commons-lsp-extensions.jar",
+        "/home/yourname/springboot/jars/io.projectreactor.reactor-core.jar",
+        "/home/yourname/springboot/jars/jdt-ls-commons.jar",
+        "/home/yourname/springboot/jars/jdt-ls-extension.jar",
+        "/home/yourname/springboot/jars/org.reactivestreams.reactive-streams.jar",
+        "/home/yourname/springboot/jars/sts-gradle-tooling.jar",
+        "/home/yourname/springboot/jars/xml-ls-extension.jar",
+    ]
 }
 ```
 
