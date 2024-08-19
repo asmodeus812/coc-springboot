@@ -1,9 +1,13 @@
 {
     "name": "coc-springboot",
-    "version": "0.0.7",
+    "version": "0.0.8",
     "description": "Coc spring boot language server extension client",
     "license": "MIT",
     "main": "lib/index.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/asmodeus812/coc-springboot"
+    },
     "keywords": [
         "coc.nvim"
     ],
