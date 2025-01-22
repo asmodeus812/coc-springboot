@@ -21,14 +21,16 @@
     },
     "devDependencies": {
         "@pivotal-tools/jvm-launch-utils": "^0.0.20",
-        "vscode-languageserver-protocol": "^3.17.2",
         "coc.nvim": "^0.0.83-next.18",
-        "esbuild": "^0.19.8",
         "deep-equal": "^2.0.5",
+        "esbuild": "^0.19.8",
         "portfinder": "1.0.32",
-        "ps-list": "^7.2.0"
+        "ps-list": "^7.2.0",
+        "vscode-languageserver-protocol": "^3.17.2"
     },
-    "dependencies": {},
+    "dependencies": {
+        "development": "^0.0.6"
+    },
     "activationEvents": [
         "onLanguage:java",
         "workspaceContains:pom.xml",
