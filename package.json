@@ -1,6 +1,6 @@
 {
     "name": "coc-springboot",
-    "version": "0.0.8",
+    "version": "0.1.0",
     "description": "Coc spring boot language server extension client",
     "license": "MIT",
     "main": "lib/index.js",
@@ -37,8 +37,7 @@
         "portfinder": "1.0.32",
         "ps-list": "^7.2.0"
     },
-    "dependencies": {
-    },
+    "dependencies": {},
     "activationEvents": [
         "onLanguage:java",
         "workspaceContains:pom.xml",
@@ -254,7 +253,7 @@
                     },
                     "boot-java.rewrite.scan-files": {
                         "type": "array",
-                        "default": [ ],
+                        "default": [],
                         "items": {
                             "type": "string"
                         },
