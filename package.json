@@ -12,7 +12,7 @@
         "coc.nvim"
     ],
     "engines": {
-        "coc": "^0.0.82"
+        "coc": ">=0.0.82"
     },
     "scripts": {
         "watch": "node esbuild.mjs --watch",
