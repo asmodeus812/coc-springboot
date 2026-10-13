@@ -39,13 +39,11 @@ path/location to the jar extensions, these are also distributed by the spring bo
 ```json
 {
     "java.jdt.ls.bundles": [
-        "/home/yourname/springboot/jars/commons-lsp-extensions.jar",
         "/home/yourname/springboot/jars/io.projectreactor.reactor-core.jar",
         "/home/yourname/springboot/jars/jdt-ls-commons.jar",
         "/home/yourname/springboot/jars/jdt-ls-extension.jar",
         "/home/yourname/springboot/jars/org.reactivestreams.reactive-streams.jar",
         "/home/yourname/springboot/jars/sts-gradle-tooling.jar",
-        "/home/yourname/springboot/jars/xml-ls-extension.jar",
     ]
 }
 ```
