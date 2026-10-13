@@ -11,6 +11,7 @@ import {
 import { getJavaExtension } from './classpath'
 import { logToSpringBootOutput, initLogOutput } from './logging'
 import { moveCursor } from './commands'
+import { HighlightCodeLensProvider, HighlightParams, HighlightService, registerHighlightCodeLens } from './highlight-service'
 import { JVM, findJvm, findJdk } from '@pivotal-tools/jvm-launch-utils'
 
 const LOG_RESOLVE_VM_ARG_PREFIX = '-Xlog:jni+resolve='
@@ -137,7 +138,7 @@ export async function activate(options: ActivatorOptions, context: coc.Extension
 
     if (options.CONNECT_TO_LS) {
         await coc.window.showInformationMessage("Connecting to spring boot language server")
-        return await connectToLS(location, options)
+        return await connectToLS(location, options, context)
     } else {
         const clientOptions = options.clientOptions
 
@@ -162,9 +163,9 @@ export async function activate(options: ActivatorOptions, context: coc.Extension
         clientOptions?.outputChannel?.appendLine("Found java executable: " + javaExecutablePath)
         clientOptions?.outputChannel?.appendLine("isJavaEightOrHigher => true")
         if (process.env['SPRING_LS_USE_SOCKET']) {
-            return setupLanguageClient(location, createServerOptionsForPortComm(location, options, context, jvm), options)
+            return setupLanguageClient(location, createServerOptionsForPortComm(location, options, context, jvm), options, context)
         } else {
-            return setupLanguageClient(location, createServerOptions(location, options, context, jvm), options)
+            return setupLanguageClient(location, createServerOptions(location, options, context, jvm), options, context)
         }
     }
 }
@@ -327,7 +328,7 @@ function findServerJar(jarsDir: any): string | undefined {
     return Path.resolve(jarsDir, serverJars[0])
 }
 
-function connectToLS(location: string, options: ActivatorOptions): Promise<LanguageClient> {
+function connectToLS(location: string, options: ActivatorOptions, context: coc.ExtensionContext): Promise<LanguageClient> {
     let connectionInfo = {
         port: 5007
     }
@@ -342,16 +343,28 @@ function connectToLS(location: string, options: ActivatorOptions): Promise<Langu
     }
 
     console.log(`Connecting to spring boot language server on port ${connectionInfo.port}`)
-    return setupLanguageClient(location, serverOptions, options)
+    return setupLanguageClient(location, serverOptions, options, context)
 }
 
-function setupLanguageClient(location: string, createServer: ServerOptions, options: ActivatorOptions): Promise<LanguageClient> {
+function setupLanguageClient(location: string, createServer: ServerOptions, options: ActivatorOptions, context: coc.ExtensionContext): Promise<LanguageClient> {
     let client = new LanguageClient(options.extensionId, options.extensionId, createServer, options.clientOptions)
     logToSpringBootOutput(`Registered spring boot language server resources for ${location}`)
 
     if (options.TRACE) {
         client.trace = coc.Trace.Verbose
     }
+
+    const highlightNotification = new coc.NotificationType<HighlightParams>("sts/highlight")
+    const highlightService = new HighlightService()
+    const codeLensService = new HighlightCodeLensProvider()
+    context.subscriptions.push(highlightService)
+    if (options.highlightCodeLensSettingKey) {
+        context.subscriptions.push(registerHighlightCodeLens(options.clientOptions.documentSelector, codeLensService, options.highlightCodeLensSettingKey))
+    }
+    client.onNotification(highlightNotification, (params: HighlightParams) => {
+        highlightService.handle(params)
+        codeLensService.handle(params)
+    })
 
     let moveCursorRequest = new coc.RequestType<MoveCursorParams, MoveCursorResponse, void>("sts/moveCursor")
     client.onRequest(moveCursorRequest, async (params: MoveCursorParams) => {
