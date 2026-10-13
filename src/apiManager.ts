@@ -1,4 +1,5 @@
 import {RequestType, Emitter, LanguageClient, commands} from "coc.nvim";
+import {registerSetConfigurationRequest} from "./set-configuration";
 import {Bean, BeansParams, ExtensionAPI} from "./api";
 import {
     LiveProcess,
@@ -60,6 +61,7 @@ export class ApiManager {
         client.onNotification(LiveProcessMemoryMetricsUpdatedNotification.type, (process: LiveProcess) => this.onDidLiveProcessMemoryMetricsUpdateEmitter.fire(process));
 
         client.onNotification(SpringIndexUpdatedNotification.type, () => this.onSpringIndexUpdateEmitter.fire());
+        registerSetConfigurationRequest(client);
 
         const beansRequestType = new RequestType<BeansParams, Bean[], void>('spring/index/beans');
         const beans = (params: BeansParams) => {

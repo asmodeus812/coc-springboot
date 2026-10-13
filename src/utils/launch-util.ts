@@ -10,6 +10,7 @@ import {
 } from 'coc.nvim'
 import { getJavaExtension } from './classpath'
 import { logToSpringBootOutput, initLogOutput } from './logging'
+import { moveCursor } from './commands'
 import { JVM, findJvm, findJdk } from '@pivotal-tools/jvm-launch-utils'
 
 const LOG_RESOLVE_VM_ARG_PREFIX = '-Xlog:jni+resolve='
@@ -353,14 +354,8 @@ function setupLanguageClient(location: string, createServer: ServerOptions, opti
     }
 
     let moveCursorRequest = new coc.RequestType<MoveCursorParams, MoveCursorResponse, void>("sts/moveCursor")
-    client.onRequest(moveCursorRequest, (params: MoveCursorParams) => {
-        for (let editor of coc.window.visibleTextEditors) {
-            if (editor.document.uri.toString() == params.uri) {
-                // let cursor = p2c.asPosition(params.position);
-                // let selection: coc.Selection = new coc.Selection(cursor, cursor);
-                // editor.selections = [selection];
-            }
-        }
+    client.onRequest(moveCursorRequest, async (params: MoveCursorParams) => {
+        await moveCursor(params.uri, params.position)
         return { applied: true }
     })
     return Promise.resolve(client)
