@@ -49,8 +49,6 @@
             "./jars/org.reactivestreams.reactive-streams.jar",
             "./jars/jdt-ls-commons.jar",
             "./jars/jdt-ls-extension.jar",
-            "./jars/commons-lsp-extensions.jar",
-            "./jars/xml-ls-extension.jar",
             "./jars/sts-gradle-tooling.jar"
         ],
         "commands": [
