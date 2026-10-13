@@ -180,8 +180,8 @@ function registerMiscCommands(context: ExtensionContext) {
         }),
 
         commands.registerCommand('springboot.properties.reload', async () => {
-            const relaodOutput = await commands.executeCommand("sts/common-properties/reload")
-            if (relaodOutput) {
+            const reloadOutput = await commands.executeCommand("sts/common-properties/reload")
+            if (reloadOutput) {
                 window.showInformationMessage('Reloading common properties metadata')
             }
         }),
