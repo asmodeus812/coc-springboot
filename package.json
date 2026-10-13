@@ -90,9 +90,9 @@
                     "boot-java.embedded-syntax-highlighting": {
                         "type": "boolean",
                         "default": true,
-                        "description": "Syntax Hyghlighting for Languages embedded into Java source code"
+                        "description": "Syntax Highlighting for Languages embedded into Java source code"
                     },
-                    "boot-java.validation.java.reconcilers": {
+                    "boot-java.java.reconcilers": {
                         "type": "boolean",
                         "default": true,
                         "description": "Reconciling Java Sources"
@@ -144,7 +144,7 @@
                     },
                     "boot-java.highlight-codelens.on": {
                         "type": "boolean",
-                        "default": false,
+                        "default": true,
                         "description": "Enable/Disable Spring running Boot application Code Lenses"
                     },
                     "boot-java.common.properties-metadata": {
@@ -154,15 +154,45 @@
                         ],
                         "description": "The path to a shared properties metadata JSON file."
                     },
+                    "boot-java.properties.completions.elide-prefix": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Elide common prefix in property key auto completions"
+                    },
                     "boot-java.jpql": {
                         "type": "boolean",
                         "default": true,
                         "description": "JPA Query language support"
                     },
-                    "boot-java.change-detection.on": {
+                    "boot-java.cron.inlay-hints": {
                         "type": "boolean",
                         "default": true,
-                        "description": "Enable/Disable detecting changes of running Spring Boot applications"
+                        "description": "Show CRON expressions inlay-hints"
+                    },
+                    "boot-java.java.completions.inject-bean": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Inject Bean completion proposals in Java editor"
+                    },
+                    "boot-java.java.beans-structure-tree": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Beans structure tree in the outline view (experimental)"
+                    },
+                    "boot-java.java.codelens-over-query-methods": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Show CodeLens with AOT generated query over Data Query methods"
+                    },
+                    "boot-java.code-action.data-query-multiline": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Generate @Query annotations as Java text blocks with formatted multi-line layout"
+                    },
+                    "boot-java.java.codelens-web-configs-on-controller-classes": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Show CodeLens with web config details on controller classes"
                     },
                     "boot-java.remote-apps": {
                         "type": "array",
@@ -278,6 +308,18 @@
                             "ON"
                         ]
                     },
+                    "spring-boot.ls.problem.boot2.PATH_IN_CONTROLLER_ANNOTATION": {
+                        "type": "string",
+                        "default": "WARNING",
+                        "description": "Controller annotation default attribute might contain a path",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
+                    },
                     "spring-boot.ls.problem.boot2.JAVA_AUTOWIRED_CONSTRUCTOR": {
                         "type": "string",
                         "default": "WARNING",
@@ -316,7 +358,7 @@
                     },
                     "spring-boot.ls.problem.boot2.JAVA_CONSTRUCTOR_PARAMETER_INJECTION": {
                         "type": "string",
-                        "default": "IGNORE",
+                        "default": "WARNING",
                         "description": "Use constructor parameter injection",
                         "enum": [
                             "IGNORE",
@@ -330,6 +372,18 @@
                         "type": "string",
                         "default": "HINT",
                         "description": "Use precise mapping annotation, i.e. '@GetMapping', '@PostMapping', etc.",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
+                    },
+                    "spring-boot.ls.problem.boot2.JAVA_PRECISE_SCOPE": {
+                        "type": "string",
+                        "default": "HINT",
+                        "description": "Use precise scope annotation, i.e. '@RequestScope', '@SessionScope', '@ApplicationScope'",
                         "enum": [
                             "IGNORE",
                             "INFO",
@@ -377,7 +431,7 @@
                     "spring-boot.ls.problem.boot2.HTTP_SECURITY_AUTHORIZE_HTTP_REQUESTS": {
                         "type": "string",
                         "default": "WARNING",
-                        "description": "'HttpSecurity.authroizeRequests(...)' API and related classes are to be deprecated use new `authorizeHttpRequests(...) and related classes",
+                        "description": "'HttpSecurity.authorizeRequests(...)' API and related classes are to be deprecated use new `authorizeHttpRequests(...) and related classes",
                         "enum": [
                             "IGNORE",
                             "INFO",
@@ -421,6 +475,90 @@
                             "HINT",
                             "ERROR"
                         ]
+                    },
+                    "spring-boot.ls.problem.boot2.VALUE_CLASSPATH_RESOURCE_TYPE": {
+                        "type": "string",
+                        "default": "WARNING",
+                        "description": "Type is not compatible with classpath resource injection",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
+                    },
+                    "spring-boot.ls.problem.boot2.WEB_CONFIGURER_CONFIGURATION": {
+                        "type": "string",
+                        "default": "WARNING",
+                        "description": "Class implementing a web configurer interface should be annotated with '@Configuration'",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
+                    },
+                    "spring-boot.ls.problem.boot2.MISSING_VALIDATED_ANNOTATION": {
+                        "type": "string",
+                        "default": "WARNING",
+                        "description": "Component class using bean validation annotations should be annotated with '@Validated'",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
+                    },
+                    "spring-boot.ls.problem.boot2.JAVA_FINAL_AUTOWIRED_FIELD": {
+                        "type": "string",
+                        "default": "WARNING",
+                        "description": "`@Autowired` field should not be `final`",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
+                    },
+                    "spring-boot.ls.problem.boot2.EXTRACT_REQUEST_MAPPING_PARENT_PATH": {
+                        "type": "string",
+                        "default": "INFO",
+                        "description": "Request mappings share a common parent path that could be extracted into a class-level `@RequestMapping`",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
+                    },
+                    "spring-boot.ls.problem.boot2.REST_CONTROLLER_COMBINATION": {
+                        "type": "string",
+                        "default": "INFO",
+                        "description": "Class annotated with both `@Controller` and `@ResponseBody` could use `@RestController` instead",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
+                    },
+                    "spring-boot.ls.problem.boot2.SPRING_JUNIT_CONFIG_COMBINATION": {
+                        "type": "string",
+                        "default": "INFO",
+                        "description": "Test class annotated with both `@ExtendWith(SpringExtension.class)` and `@ContextConfiguration` could use `@SpringJUnitConfig` instead",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
                     }
                 }
             },
@@ -442,7 +580,7 @@
                     "spring-boot.ls.problem.boot3.JAVA_TYPE_NOT_SUPPORTED": {
                         "type": "string",
                         "default": "ERROR",
-                        "description": "Type no supported as of Spring Boot 3",
+                        "description": "Type not supported as of Spring Boot 3",
                         "enum": [
                             "IGNORE",
                             "INFO",
@@ -474,13 +612,126 @@
                             "HINT",
                             "ERROR"
                         ]
+                    },
+                    "spring-boot.ls.problem.boot3.MODULITH_APPLICATION_MODULE_LISTENER": {
+                        "type": "string",
+                        "default": "INFO",
+                        "description": "Use '@ApplicationModuleListener' instead of '@Async'/'@Transactional'/'@TransactionalEventListener'",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "boot4",
+                "title": "Boot 4.x Best Practices & Optimizations",
+                "order": 403,
+                "properties": {
+                    "boot-java.validation.java.boot4": {
+                        "type": "string",
+                        "default": "AUTO",
+                        "description": "Enablement",
+                        "enum": [
+                            "AUTO",
+                            "OFF",
+                            "ON"
+                        ]
+                    },
+                    "spring-boot.ls.problem.boot4.REGISTRAR_BEAN_INVALID_ANNOTATION": {
+                        "type": "string",
+                        "default": "WARNING",
+                        "description": "Bean Registrar cannot be registered as a bean via `@Component` annotations",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
+                    },
+                    "spring-boot.ls.problem.boot4.REGISTRAR_BEAN_DECLARATION": {
+                        "type": "string",
+                        "default": "WARNING",
+                        "description": "Bean Registrar should be added to a configuration bean via `@Import`",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
+                    },
+                    "spring-boot.ls.problem.boot4.API_VERSIONING_NOT_CONFIGURED": {
+                        "type": "string",
+                        "default": "WARNING",
+                        "description": "API Versioning used but not configured anywhere",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
+                    },
+                    "spring-boot.ls.problem.boot4.API_VERSION_SYNTAX_ERROR": {
+                        "type": "string",
+                        "default": "WARNING",
+                        "description": "API version cannot be parsed into a standard semantic version",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
+                    },
+                    "spring-boot.ls.problem.boot4.API_VERSIONING_VIA_PATH_SEGMENT_CONFIGURED_IN_COMBINATION": {
+                        "type": "string",
+                        "default": "WARNING",
+                        "description": "API versioning path segment strategy should not be mixed with other strategies",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
+                    },
+                    "spring-boot.ls.problem.boot4.API_VERSIONING_STRATEGY_CONFIGURATION_DUPLICATED": {
+                        "type": "string",
+                        "default": "WARNING",
+                        "description": "API versioning strategy is configured multiple times with the same strategy",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
+                    },
+                    "spring-boot.ls.problem.boot4.SPRING_DATA_STRING_PROPERTY_REFERENCE": {
+                        "type": "string",
+                        "default": "INFO",
+                        "description": "Non type-safe String-based property reference for a Spring Data domain type",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
                     }
                 }
             },
             {
                 "id": "spring-aot",
                 "title": "AOT Optimizations",
-                "order": 403,
+                "order": 404,
                 "properties": {
                     "boot-java.validation.java.spring-aot": {
                         "type": "string",
@@ -532,7 +783,7 @@
             {
                 "id": "application-properties",
                 "title": "Property Config Files",
-                "order": 404,
+                "order": 405,
                 "properties": {
                     "spring-boot.ls.problem.application-properties.PROP_INVALID_BEAN_NAVIGATION": {
                         "type": "string",
@@ -671,7 +922,7 @@
             {
                 "id": "application-yaml",
                 "title": "YAML Config Files",
-                "order": 405,
+                "order": 406,
                 "properties": {
                     "spring-boot.ls.problem.application-yaml.YAML_SYNTAX_ERROR": {
                         "type": "string",
@@ -834,7 +1085,7 @@
             {
                 "id": "spel",
                 "title": "SpEL Expressions",
-                "order": 406,
+                "order": 407,
                 "properties": {
                     "boot-java.validation.spel.on": {
                         "type": "string",
@@ -856,13 +1107,25 @@
                             "HINT",
                             "ERROR"
                         ]
+                    },
+                    "spring-boot.ls.problem.spel.PROPERTY_PLACE_HOLDER_SYNTAX": {
+                        "type": "string",
+                        "default": "ERROR",
+                        "description": "Property place holder raised a ParseException",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
                     }
                 }
             },
             {
                 "id": "version-validation",
                 "title": "Versions and Support Ranges",
-                "order": 407,
+                "order": 408,
                 "properties": {
                     "boot-java.validation.java.version-validation": {
                         "type": "string",
@@ -956,13 +1219,31 @@
                             "HINT",
                             "ERROR"
                         ]
+                    },
+                    "spring-boot.ls.problem.version-validation.SPRING_CLOUD_INCOMPATIBLE_BOOT_VERSION": {
+                        "type": "string",
+                        "default": "WARNING",
+                        "description": "Incompatible Spring Boot Version for Spring Cloud",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
+                    },
+                    "spring-boot.ls.problem-parameters.version-validation.use-project-build-file": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Check project repositories for available versions",
+                        "markdownDescription": "Check project repositories for available versions - _(when enabled, uses the Maven repositories configured in the project build file to look up available Spring Boot versions. Falls back to spring.io if the repositories cannot be queried.)_"
                     }
                 }
             },
             {
                 "id": "data-query",
-                "title": "Data Query",
-                "order": 408,
+                "title": "Data Queries",
+                "order": 409,
                 "properties": {
                     "boot-java.validation.data-query": {
                         "type": "string",
@@ -1008,6 +1289,92 @@
                             "HINT",
                             "ERROR"
                         ]
+                    }
+                }
+            },
+            {
+                "id": "cron",
+                "title": "CRON Expressions",
+                "order": 410,
+                "properties": {
+                    "boot-java.validation.cron": {
+                        "type": "string",
+                        "default": "ON",
+                        "description": "Enablement",
+                        "enum": [
+                            "OFF",
+                            "ON"
+                        ]
+                    },
+                    "spring-boot.ls.problem.cron.SYNTAX": {
+                        "type": "string",
+                        "default": "ERROR",
+                        "description": "Syntax",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
+                    },
+                    "spring-boot.ls.problem.cron.FIELD": {
+                        "type": "string",
+                        "default": "ERROR",
+                        "description": "Field",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "spring-ai",
+                "title": "Spring AI",
+                "order": 411,
+                "properties": {
+                    "boot-java.validation.spring-ai": {
+                        "type": "string",
+                        "default": "ON",
+                        "description": "Enablement",
+                        "enum": [
+                            "OFF",
+                            "ON"
+                        ]
+                    },
+                    "spring-boot.ls.problem.spring-ai.SPRING_AI_TOOL_MISSING_DESCRIPTION": {
+                        "type": "string",
+                        "default": "WARNING",
+                        "description": "Spring AI tool/prompt/resource is missing a description. Descriptions are critical for the LLM to correctly select and invoke the tool.",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
+                    },
+                    "spring-boot.ls.problem.spring-ai.SPRING_AI_TOOL_DESCRIPTION_TOO_SHORT": {
+                        "type": "string",
+                        "default": "WARNING",
+                        "description": "Spring AI tool/prompt/resource description is too short. A meaningful description helps the LLM decide when and how to invoke the tool.",
+                        "enum": [
+                            "IGNORE",
+                            "INFO",
+                            "WARNING",
+                            "HINT",
+                            "ERROR"
+                        ]
+                    },
+                    "spring-boot.ls.problem-parameters.spring-ai.SPRING_AI_TOOL_DESCRIPTION_TOO_SHORT.minimum-length": {
+                        "type": "integer",
+                        "default": 30,
+                        "minimum": 1,
+                        "description": "Minimum required character length for Spring AI tool descriptions (@Tool, @McpTool, @McpPrompt, @McpResource)."
                     }
                 }
             }
