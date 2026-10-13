@@ -172,6 +172,8 @@ function createServerOptions(location: string, options: ActivatorOptions, contex
     const executable: Executable = Object.create(null)
     const execOptions: ExecutableOptions = Object.create(null)
     execOptions.env = Object.assign(process.env)
+    // Run from the server location, otherwise spring boot would pick up application.properties or config/ from the cwd
+    execOptions.cwd = location
     executable.options = execOptions
     executable.command = jvm.getJavaExecutable()
     const vmArgs = prepareJvmArgs(location, options, context, jvm, port)
@@ -193,7 +195,7 @@ function createServerOptionsForPortComm(location: string, options: ActivatorOpti
                     })
                 }).listen(port, () => {
                     let processLaunchoptions = {
-                        cwd: coc.workspace.root
+                        cwd: location
                     }
                     const args = prepareJvmArgs(location, options, context, jvm, port)
                     const launcher = findServerJar(Path.resolve(location, 'language-server'))
@@ -229,8 +231,7 @@ function prepareJvmArgs(location: string, options: ActivatorOptions, context: co
     }
 
     const args = [
-        '-Dsts.lsp.client=vscode',
-        '-XX:TieredStopAtLevel=1'
+        '-Dsts.lsp.client=vscode'
     ]
     const logfile: string | undefined = options.workspaceOptions.get("logfile")
     if (logfile) {

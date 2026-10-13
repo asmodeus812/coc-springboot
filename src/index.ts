@@ -24,13 +24,18 @@ const JPA_QUERY_PROPERTIES_LANGUAGE_ID = "jpa-query-properties"
 const STOP_ASKING = "Stop Asking"
 
 export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
+    const specificVmArgs = [
+        "-Dspring.config.location=classpath:/application.properties",
+        "-Djdk.util.zip.disableZip64ExtraFieldValidation=true"
+    ]
+
     let options: commons.ActivatorOptions = {
         extensionId: 'springboot',
         CONNECT_TO_LS: false,
         jvmHeap: '1024m',
         preferJdk: true,
         DEBUG: false,
-        vmArgs: [],
+        vmArgs: specificVmArgs,
         checkjvm: (_, jvm: commons.JVM) => {
             let version = jvm.getMajorVersion()
             if (version < 21) {
