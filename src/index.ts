@@ -9,7 +9,6 @@ import {
 } from 'coc.nvim'
 
 import * as commons from './utils'
-import * as rewrite from './rewrite'
 import { ApiManager } from "./apiManager"
 import { ExtensionAPI } from "./api"
 import { registerJavaDataService, registerClasspathService } from "./utils"
@@ -150,7 +149,6 @@ export function activate(context: ExtensionContext): Thenable<ExtensionAPI> {
 
         }))
         commands.registerCommand('vscode-spring-boot.ls.stop', () => client.stop())
-        rewrite.activate(client, options, context)
         startPropertiesConversionSupport(context)
         registerMiscCommands(context)
 
