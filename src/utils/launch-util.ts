@@ -6,7 +6,7 @@ import * as Path from 'path'
 import * as FS from 'fs'
 import * as Net from 'net'
 import {
-    Disposable, Event, Emitter, LanguageClient, StreamInfo, ServerOptions, ExecutableOptions, Executable, LanguageClientOptions, Position
+    LanguageClient, StreamInfo, ServerOptions, ExecutableOptions, Executable, LanguageClientOptions, Position
 } from 'coc.nvim'
 import { getJavaExtension } from './classpath'
 import { logToSpringBootOutput, initLogOutput } from './logging'
@@ -371,36 +371,4 @@ interface MoveCursorParams {
 
 interface MoveCursorResponse {
     applied: boolean
-}
-
-export interface ListenableSetting<T> {
-    value: T
-    onDidChangeValue: coc.Event<void>
-}
-
-export class ListenablePreferenceSetting<T> implements ListenableSetting<T> {
-
-    private _onDidChangeValue = new Emitter<void>();
-    private _disposable: Disposable
-
-    constructor(private section: string) {
-        this._disposable = coc.workspace.onDidChangeConfiguration(e => {
-            if (e.affectsConfiguration(this.section)) {
-                this._onDidChangeValue.fire()
-            }
-        })
-    }
-
-    get value(): T {
-        return coc.workspace.getConfiguration().get(this.section) as T
-    }
-
-    get onDidChangeValue(): Event<void> {
-        return this._onDidChangeValue.event
-    }
-
-    dispose(): any {
-        return this._disposable.dispose()
-    }
-
 }
