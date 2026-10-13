@@ -4,10 +4,11 @@ import {ExtensionContext, Uri, commands, window, workspace} from "coc.nvim";
 
 export function startPropertiesConversionSupport(extension: ExtensionContext) {
     extension.subscriptions.push(
-        commands.registerCommand('springboot.props-to-yaml', async (uri) => {
+        commands.registerCommand('springboot.props-to-yaml', async (target?: string | Uri) => {
+            let uri = toUri(target);
             if (!uri && window.activeTextEditor) {
-                const activeUri = window.activeTextEditor.document.uri;
-                if (".properties" === path.extname(activeUri)) {
+                const activeUri = Uri.parse(window.activeTextEditor.document.uri);
+                if (".properties" === path.extname(activeUri.path)) {
                     uri = activeUri;
                 }
             }
@@ -17,10 +18,11 @@ export function startPropertiesConversionSupport(extension: ExtensionContext) {
             return await commands.executeCommand("sts/boot/props-to-yaml", uri.toString(), Uri.file(getTargetFile(uri.path, "yml")).toString(), shouldReplace());
         }),
 
-        commands.registerCommand('springboot.yaml-to-props', async (uri) => {
+        commands.registerCommand('springboot.yaml-to-props', async (target?: string | Uri) => {
+            let uri = toUri(target);
             if (!uri && window.activeTextEditor) {
-                const activeUri = window.activeTextEditor.document.uri;
-                const ext = path.extname(activeUri)
+                const activeUri = Uri.parse(window.activeTextEditor.document.uri);
+                const ext = path.extname(activeUri.path)
                 if (".yml" === ext || ".yaml" === ext) {
                     uri = activeUri;
                 }
@@ -31,6 +33,13 @@ export function startPropertiesConversionSupport(extension: ExtensionContext) {
             return await commands.executeCommand("sts/boot/yaml-to-props", uri.toString(), Uri.file(getTargetFile(uri.path, "properties")).toString(), shouldReplace());
         })
     );
+}
+
+function toUri(target?: string | Uri): Uri | undefined {
+    if (typeof target === 'string') {
+        return target.includes('://') ? Uri.parse(target) : Uri.file(target);
+    }
+    return target;
 }
 
 function getTargetFile(sourcePath: string, ext: string): string {
