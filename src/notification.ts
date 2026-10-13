@@ -50,8 +50,12 @@ export namespace LiveProcessMemoryMetricsUpdatedNotification {
 	export const type = new NotificationType<LiveProcess>('sts/liveprocess/memory/metrics/updated');
 }
 
+export interface IndexUpdateDetails {
+	affectedProjects?: string[]
+}
+
 export namespace SpringIndexUpdatedNotification {
-	export const type = new NotificationType<void>('spring/index/updated');
+	export const type = new NotificationType<IndexUpdateDetails>('spring/index/updated');
 }
 
 export namespace LiveProcessLogLevelUpdatedNotification {

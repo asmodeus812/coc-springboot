@@ -1,5 +1,5 @@
 import { Event, Location, LanguageClient } from "coc.nvim";
-import { LiveProcess } from "./notification";
+import { IndexUpdateDetails, LiveProcess } from "./notification";
 
 export interface ExtensionAPI {
     readonly client: LanguageClient;
@@ -107,7 +107,7 @@ interface InjectionPoint {
 
 interface SpringIndex {
    readonly beans: (params: BeansParams) =>  Promise<Bean[]>;
-   readonly onSpringIndexUpdated: Event<void>;
+   readonly onSpringIndexUpdated: Event<IndexUpdateDetails>;
 }
 
 interface BeansParams {
