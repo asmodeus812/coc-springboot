@@ -228,14 +228,22 @@ function prepareJvmArgs(location: string, options: ActivatorOptions, context: co
         jvmArgs.push(...options.vmArgs)
     }
 
-    let logfile: string = options.workspaceOptions.get("logfile") || "/dev/null"
-    //The logfile = '/dev/null' is handled specifically by the language server process
-    options.clientOptions?.outputChannel?.appendLine('Redirecting server logs to ' + logfile)
     const args = [
         '-Dsts.lsp.client=vscode',
-        '-Dsts.log.file=' + logfile,
         '-XX:TieredStopAtLevel=1'
     ]
+    const logfile: string | undefined = options.workspaceOptions.get("logfile")
+    if (logfile) {
+        options.clientOptions?.outputChannel?.appendLine('Redirecting server logs to ' + logfile)
+        args.push(
+            '-Dspring.profiles.active=file-logging',
+            `-Dlogging.file.name=${coc.workspace.expand(logfile)}`
+        )
+    }
+    const rootLogLevel: string | undefined = options.workspaceOptions.get("logLevel")
+    if (rootLogLevel) {
+        args.push(`-Dlogging.level.root=${rootLogLevel}`)
+    }
     if (port && port > 0) {
         args.push('-Dspring.lsp.client-port=' + port)
         args.push('-Dserver.port=' + port)
