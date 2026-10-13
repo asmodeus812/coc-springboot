@@ -1,6 +1,5 @@
-import { Event } from "vscode";
+import { Event, Location, LanguageClient } from "coc.nvim";
 import { LiveProcess } from "./notification";
-import { Location, LanguageClient } from "coc.nvim";
 
 export interface ExtensionAPI {
     readonly client: LanguageClient;
