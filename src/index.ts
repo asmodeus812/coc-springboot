@@ -109,7 +109,7 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
 
     return commons.activate(options, context).then(client => {
         // @Note that the name of this command is hard coded in the spring boot extensions and is expected to be exactly - vscode-spring-boot.ls.start
-        commands.registerCommand('vscode-spring-boot.ls.start', () => client.start().then(() => {
+        context.subscriptions.push(commands.registerCommand('vscode-spring-boot.ls.start', () => client.start().then(() => {
             console.log(`Starting spring-boot server`)
 
             // TODO: workaround with filetypes for https://github.com/neoclide/coc.nvim/issues/5112,
@@ -154,8 +154,8 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
             registerClasspathService(client)
             registerJavaDataService(client)
 
-        }))
-        commands.registerCommand('vscode-spring-boot.ls.stop', () => client.stop())
+        })))
+        context.subscriptions.push(commands.registerCommand('vscode-spring-boot.ls.stop', () => client.stop()))
         startPropertiesConversionSupport(context)
         registerMiscCommands(context)
 
