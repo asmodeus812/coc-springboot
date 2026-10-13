@@ -177,7 +177,9 @@ function registerMiscCommands(context: ExtensionContext) {
                     projectNames,
                     { placeholder: "Select the target project." },
                 )
-                commands.executeCommand('sts/modulith/metadata/refresh', modulithProjects[projectName])
+                if (projectName) {
+                    commands.executeCommand('sts/modulith/metadata/refresh', modulithProjects[projectName])
+                }
             }
         }),
 
