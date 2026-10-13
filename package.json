@@ -65,6 +65,10 @@
                 "title": "Refresh Modulith Metadata"
             },
             {
+                "command": "springboot.live-hover.connect",
+                "title": "Show/Refresh/Hide Live Data from Spring Boot Processes"
+            },
+            {
                 "command": "springboot.set.log-levels",
                 "title": "Set Log Levels"
             },

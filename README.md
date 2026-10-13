@@ -71,6 +71,22 @@ Easy navigation to Spring-specific elements of your source code.
 * `@Component`,        `@Bean`, `@Autowired`: shows detailed information about the beans and their wiring from the live app
 * `@ConditionalOn...`: shows information about the conditions and their evaluation at runtime
 
+## Live data from running applications
+
+Unlike vscode, there is no debug launcher which registers the started applications with the language server, locally
+running applications are only discovered when scanning of all local java processes is enabled. The target application
+has to expose its actuator endpoints over JMX, e.g. `-Dspring.jmx.enabled=true -Dmanagement.endpoints.jmx.exposure.include=*`,
+adding `-Dspring.application.admin.enabled=true` also exposes the server port used by the request mapping links
+
+```json
+{
+    "boot-java.live-information.all-local-java-processes": true
+}
+```
+
+* `:CocCommand springboot.live-hover.connect` shows, refreshes or hides live data from a running application
+* `:CocCommand springboot.set.log-levels` changes the log level of a logger in a running application
+
 ## Code templates
 
 Write Spring code with templates, available via regular code completion.
