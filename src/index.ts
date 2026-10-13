@@ -15,6 +15,7 @@ import { registerJavaDataService, registerClasspathService } from "./utils"
 import { startPropertiesConversionSupport } from "./convert-props-yaml"
 import * as liveHoverUi from "./live-hover-connect-ui"
 import * as setLogLevelUi from "./set-log-levels-ui"
+import { buildCommandsMiddleware, registerBuildCommands } from "./build-commands"
 
 const PROPERTIES_LANGUAGE_ID = "spring-boot-properties"
 const YAML_LANGUAGE_ID = "spring-boot-properties-yaml"
@@ -110,6 +111,7 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
             synchronize: {
                 configurationSection: ['boot-java', 'spring-boot', 'http']
             },
+            middleware: buildCommandsMiddleware,
             initializationOptions: () => ({
                 workspaceFolders: workspace.workspaceFolders ? workspace.workspaceFolders.map(f => f.uri.toString()) : null,
                 // Do not enable JDT classpath listeners at the startup - classpath service would enable it later if needed based on the Java extension mode
@@ -175,6 +177,7 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
 
         commons.registerCommands(context)
         registerJarContentLoader(context)
+        registerBuildCommands(client, context)
         liveHoverUi.activate(client, context)
         setLogLevelUi.activate(client, context)
         startPropertiesConversionSupport(context)
