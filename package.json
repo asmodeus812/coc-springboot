@@ -218,7 +218,7 @@
                             "string",
                             "null"
                         ],
-                        "description": "Specifies the directory for where to spring boot and its extensions, the directory must contain two folders, a language-server/ and jars/, where the server is located in the language-server/ folder and all extension binaries are located in the jars/ folder"
+                        "description": "Specifies the directory the spring boot language server is loaded from, the directory must contain a language-server/ folder where the server is located, the extension binaries are always loaded from the extension itself"
                     },
                     "spring-boot.ls.java.home": {
                         "type": [
