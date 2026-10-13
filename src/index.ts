@@ -174,6 +174,7 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
         context.subscriptions.push(commands.registerCommand('vscode-spring-boot.ls.stop', () => client.stop()))
 
         commons.registerCommands(context)
+        registerJarContentLoader(context)
         liveHoverUi.activate(client, context)
         setLogLevelUi.activate(client, context)
         startPropertiesConversionSupport(context)
@@ -181,6 +182,31 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
 
         return new ApiManager(client).api
     })
+}
+
+/**
+ * Load the content of `spring-boot-ls:file:/...jar!/...` links (jar entries) through the language server,
+ * the coc content providers only handle `scheme:/...` buffer names, hence the dedicated autocmd
+ */
+function registerJarContentLoader(context: ExtensionContext) {
+    context.subscriptions.push(workspace.registerAutocmd({
+        event: "BufReadCmd",
+        pattern: "spring-boot-ls:*/*",
+        arglist: ["expand('<afile>')", "+expand('<abuf>')"],
+        request: true,
+        callback: async (uri: string, bufnr: number) => {
+            try {
+                const content = await commands.executeCommand<string>('sts/jar/fetch-content', uri)
+                const buffer = nvim.createBuffer(bufnr)
+                await buffer.setLines((content || '').split(/\r?\n/), { start: 0, end: -1, strictIndexing: false })
+                await buffer.setOption('buftype', 'nofile')
+                await buffer.setOption('modifiable', false)
+                await nvim.command('filetype detect')
+            } catch (error) {
+                window.showErrorMessage(`Unable to load ${uri}: ${error}`)
+            }
+        }
+    }))
 }
 
 function registerMiscCommands(context: ExtensionContext) {
