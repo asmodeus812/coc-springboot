@@ -70,8 +70,16 @@ function getUserDefinedJvmArgs(wsOpts: coc.WorkspaceConfiguration): string[] {
 
 function getUserDefinedLsDirectory(options: ActivatorOptions, context: coc.ExtensionContext): string {
     const directory: string | undefined = options.workspaceOptions.get("directory")
-    const location = directory ? coc.workspace.expand(directory) : undefined
-    return location && FS.existsSync(location) ? location : context.extensionPath
+    let location = context.extensionPath
+    if (directory) {
+        const expanded = coc.workspace.expand(directory)
+        if (FS.existsSync(expanded)) {
+            location = expanded
+        } else {
+            logToSpringBootOutput(`"spring-boot.ls.directory" points to folder that does NOT exist: ${expanded}`)
+        }
+    }
+    return location
 }
 
 function getSpringUserDefinedJavaHome(wsOpts: coc.WorkspaceConfiguration, log: coc.OutputChannel): string | undefined {
@@ -123,6 +131,7 @@ function findJdtEmbeddedJRE(): string | undefined {
 }
 
 export async function activate(options: ActivatorOptions, context: coc.ExtensionContext): Promise<LanguageClient> {
+    options.clientOptions.outputChannel = initLogOutput(context)
     let location: string = getUserDefinedLsDirectory(options, context)
 
     if (options.CONNECT_TO_LS) {
@@ -130,7 +139,6 @@ export async function activate(options: ActivatorOptions, context: coc.Extension
         return await connectToLS(location, options)
     } else {
         const clientOptions = options.clientOptions
-        clientOptions.outputChannel = initLogOutput(context)
 
         let finder = options.preferJdk ? findJdk : findJvm
         let home: string | undefined = getSpringUserDefinedJavaHome(options.workspaceOptions, clientOptions?.outputChannel)
