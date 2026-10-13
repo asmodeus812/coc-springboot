@@ -11,7 +11,6 @@ import {
 import { getJavaExtension } from './classpath'
 import { logToSpringBootOutput, initLogOutput } from './logging'
 import { JVM, findJvm, findJdk } from '@pivotal-tools/jvm-launch-utils'
-import { abort } from 'process'
 
 const LOG_RESOLVE_VM_ARG_PREFIX = '-Xlog:jni+resolve='
 const DEBUG_ARG = '-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=y'
@@ -70,23 +69,9 @@ function getUserDefinedJvmArgs(wsOpts: coc.WorkspaceConfiguration): string[] {
 }
 
 function getUserDefinedLsDirectory(options: ActivatorOptions, context: coc.ExtensionContext): string {
-    let location: string | undefined = options.workspaceOptions.get("directory")
-    location = !location || !FS.existsSync(location) ? context.extensionPath : location
-
-    if (location) {
-        location = coc.workspace.expand(location)
-        if (!FS.existsSync(location)) {
-            logToSpringBootOutput(
-                `Spring boot can not start, invalid or non existent path was detected ${location}`,
-            )
-            coc.window.showErrorMessage(`Spring boot not found, check springboot output`)
-            abort()
-        }
-    } else {
-        coc.window.showErrorMessage(`Spring boot binaries directory could not be resolved at all`)
-        abort()
-    }
-    return location
+    const directory: string | undefined = options.workspaceOptions.get("directory")
+    const location = directory ? coc.workspace.expand(directory) : undefined
+    return location && FS.existsSync(location) ? location : context.extensionPath
 }
 
 function getSpringUserDefinedJavaHome(wsOpts: coc.WorkspaceConfiguration, log: coc.OutputChannel): string | undefined {
