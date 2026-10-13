@@ -154,6 +154,8 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
             registerClasspathService(client)
             registerJavaDataService(client)
 
+            // Force classpath listener to be enabled. Boot LS can only be launched iff classpath is available and there Spring-Boot on the classpath somewhere.
+            commands.executeCommand('sts.vscode-spring-boot.enableClasspathListening', true)
         })))
         context.subscriptions.push(commands.registerCommand('vscode-spring-boot.ls.stop', () => client.stop()))
         startPropertiesConversionSupport(context)
