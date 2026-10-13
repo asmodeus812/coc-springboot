@@ -26,11 +26,6 @@ const STOP_ASKING = "Stop Asking"
 
 export function activate(context: ExtensionContext): Thenable<ExtensionAPI> {
     let options: commons.ActivatorOptions = {
-        // explodedLsJarData: {
-        //     lsLocation: 'language-server',
-        //     configFileName: 'application.properties',
-        //     mainClass: 'org.springframework.ide.vscode.boot.app.BootLanguageServerBootApp',
-        // },
         extensionId: 'springboot',
         CONNECT_TO_LS: false,
         jvmHeap: '1024m',
