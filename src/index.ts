@@ -115,7 +115,8 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
                 // listeners when client has callbacks for STS4 extension java related messages registered via JDT classpath and Data Service registration
                 enableJdtClasspath: false
             })
-        }
+        },
+        highlightCodeLensSettingKey: 'boot-java.highlight-codelens.on'
     }
 
     return commons.activate(options, context).then(client => {
