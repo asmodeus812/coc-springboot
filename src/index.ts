@@ -29,6 +29,17 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
         "-Djdk.util.zip.disableZip64ExtraFieldValidation=true"
     ]
 
+    const aiPreferencesConfig = workspace.getConfiguration("boot-java.ai")
+    const mcpServerEnabled = aiPreferencesConfig.get<boolean>("mcp-server-enabled")
+    const mcpServerPort = aiPreferencesConfig.get<number>("mcp-server-port", 50627)
+
+    if (mcpServerEnabled === true && mcpServerPort >= 0 && mcpServerPort <= 65535) {
+        specificVmArgs.push("-Dserver.port=" + mcpServerPort)
+    } else {
+        // the embedded mcp server is a web application, do not start it when it is not requested
+        specificVmArgs.push("-Dspring.main.web-application-type=NONE")
+    }
+
     let options: commons.ActivatorOptions = {
         extensionId: 'springboot',
         CONNECT_TO_LS: false,

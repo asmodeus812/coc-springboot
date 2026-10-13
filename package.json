@@ -294,6 +294,23 @@
                 }
             },
             {
+                "id": "ai",
+                "title": "AI",
+                "order": 420,
+                "properties": {
+                    "boot-java.ai.mcp-server-enabled": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Enable embedded MCP server (experimental)"
+                    },
+                    "boot-java.ai.mcp-server-port": {
+                        "type": "integer",
+                        "default": 50627,
+                        "description": "Port used by the embedded MCP server"
+                    }
+                }
+            },
+            {
                 "id": "boot2",
                 "title": "Boot 2.x Best Practices & Optimizations",
                 "order": 401,
