@@ -17,6 +17,7 @@
     "scripts": {
         "watch": "node esbuild.mjs --watch",
         "build": "node esbuild.mjs",
+        "typecheck": "tsc --noEmit -p .",
         "prepare": "node esbuild.mjs"
     },
     "devDependencies": {
@@ -24,7 +25,8 @@
         "coc.nvim": "^0.0.83-next.18",
         "deep-equal": "^2.0.5",
         "esbuild": "^0.19.8",
-        "portfinder": "1.0.32"
+        "portfinder": "1.0.32",
+        "typescript": "^5.9.3"
     },
     "activationEvents": [
         "onLanguage:java",
@@ -189,11 +191,6 @@
                         "type": "boolean",
                         "default": true,
                         "description": "Spring Boot Modulith automatic project tracking and metadata update"
-                    },
-                    "boot-java-vscode-only.test-jars": {
-                        "type": "boolean",
-                        "default": true,
-                        "description": "Enable/Disable Spring Boot TestJars launch environment variables"
                     },
                     "spring.tools.properties.replace-converted-file": {
                         "type": "boolean",

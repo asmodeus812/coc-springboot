@@ -23,7 +23,7 @@ const JPA_QUERY_PROPERTIES_LANGUAGE_ID = "jpa-query-properties"
 
 const STOP_ASKING = "Stop Asking"
 
-export function activate(context: ExtensionContext): Thenable<ExtensionAPI> {
+export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
     let options: commons.ActivatorOptions = {
         extensionId: 'springboot',
         CONNECT_TO_LS: false,
