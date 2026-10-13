@@ -169,6 +169,8 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
             commands.executeCommand('sts.vscode-spring-boot.enableClasspathListening', true)
         })))
         context.subscriptions.push(commands.registerCommand('vscode-spring-boot.ls.stop', () => client.stop()))
+
+        commons.registerCommands(context)
         startPropertiesConversionSupport(context)
         registerMiscCommands(context)
 
@@ -192,11 +194,6 @@ function registerMiscCommands(context: ExtensionContext) {
                     commands.executeCommand('sts/modulith/metadata/refresh', modulithProjects[projectName])
                 }
             }
-        }),
-
-        commands.registerCommand('springboot.open.url', async (openUrl) => {
-            window.showInformationMessage(`Opening ${openUrl} with browser`)
-            return workspace.nvim.call('coc#ui#open_url', [openUrl], true)
         }),
 
         commands.registerCommand('springboot.properties.reload', async () => {
