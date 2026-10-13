@@ -13,6 +13,8 @@ import { ApiManager } from "./apiManager"
 import { ExtensionAPI } from "./api"
 import { registerJavaDataService, registerClasspathService } from "./utils"
 import { startPropertiesConversionSupport } from "./convert-props-yaml"
+import * as liveHoverUi from "./live-hover-connect-ui"
+import * as setLogLevelUi from "./set-log-levels-ui"
 
 const PROPERTIES_LANGUAGE_ID = "spring-boot-properties"
 const YAML_LANGUAGE_ID = "spring-boot-properties-yaml"
@@ -172,6 +174,8 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
         context.subscriptions.push(commands.registerCommand('vscode-spring-boot.ls.stop', () => client.stop()))
 
         commons.registerCommands(context)
+        liveHoverUi.activate(client, context)
+        setLogLevelUi.activate(client, context)
         startPropertiesConversionSupport(context)
         registerMiscCommands(context)
 
