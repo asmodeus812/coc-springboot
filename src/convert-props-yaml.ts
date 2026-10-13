@@ -13,7 +13,8 @@ export function startPropertiesConversionSupport(extension: ExtensionContext) {
                 }
             }
             if (!uri) {
-                throw new Error("No '.properties' file selected");
+                window.showErrorMessage("No '.properties' file selected");
+                return;
             }
             return await commands.executeCommand("sts/boot/props-to-yaml", uri.toString(), Uri.file(getTargetFile(uri.path, "yml")).toString(), shouldReplace());
         }),
@@ -28,7 +29,8 @@ export function startPropertiesConversionSupport(extension: ExtensionContext) {
                 }
             }
             if (!uri) {
-                throw new Error("No '.yaml' file selected");
+                window.showErrorMessage("No '.yaml' file selected");
+                return;
             }
             return await commands.executeCommand("sts/boot/yaml-to-props", uri.toString(), Uri.file(getTargetFile(uri.path, "properties")).toString(), shouldReplace());
         })
