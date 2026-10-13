@@ -158,7 +158,7 @@ export async function activate(options: ActivatorOptions, context: coc.Extension
             jvm = await finder(home as string, msg => clientOptions?.outputChannel?.appendLine(msg)) as JVM
         } catch (error) {
             coc.window.showErrorMessage("Error while trying to find jvm: " + error)
-            await Promise.reject(error)
+            throw error
         }
         if (!jvm) {
             coc.window.showErrorMessage("Couldn't locate java in $JAVA_HOME or $PATH")
