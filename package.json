@@ -53,6 +53,10 @@
         ],
         "commands": [
             {
+                "command": "vscode-spring-boot.ls.start",
+                "title": "Start Spring Boot Language Server"
+            },
+            {
                 "command": "springboot.properties.reload",
                 "title": "Reload Shared Properties Metadata"
             },
