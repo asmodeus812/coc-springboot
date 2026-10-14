@@ -48,12 +48,16 @@ path/location to the jar extensions, these are also distributed by the spring bo
 }
 ```
 
-You can also define your own patterns and map them to the language-ids
-`spring-boot-properties` or `spring-boot-properties-yaml`
+The configuration files keep their native filetypes (e.g. `yaml`, `jproperties`), so other language servers such as
+`coc-yaml` keep working on them. Only the spring boot language server is told about the spring specific language ids
+(`spring-boot-properties`, `spring-boot-properties-yaml`, `spring-factories`, `jpa-query-properties`), based on the file
+name patterns below
 
  - `*.java` =>  activates Spring Boot specific support editing `.java` files.
- - `application*.properties` => activates support for Spring Boot properties in `.properties`format.
- - `application*.yml` =>  activates support for Spring Boot properties in `.yml` format.
+ - `application*.properties`, `bootstrap*.properties` => Spring Boot properties in `.properties` format.
+ - `application*.yml`, `application*.yaml`, `bootstrap*.yml`, `bootstrap*.yaml` => Spring Boot properties in `.yml` format.
+ - `*.factories` => Spring factories files.
+ - `jpa-named-queries.properties` => JPA named queries.
 
 # Functionality for `.java`
 
