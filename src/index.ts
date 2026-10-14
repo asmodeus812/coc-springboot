@@ -5,6 +5,7 @@ import {
     commands,
     window,
     workspace,
+    Disposable,
     ExtensionContext,
 } from 'coc.nvim'
 
@@ -16,13 +17,11 @@ import { startPropertiesConversionSupport } from "./convert-props-yaml"
 import * as liveHoverUi from "./live-hover-connect-ui"
 import * as setLogLevelUi from "./set-log-levels-ui"
 import { buildCommandsMiddleware, registerBuildCommands } from "./build-commands"
+import { configFileSelector, isRegistrationHookSupported, languageIdMiddleware, registerLegacyFiletypes } from "./language-ids"
+import { logToSpringBootOutput } from "./utils/logging"
 
-const PROPERTIES_LANGUAGE_ID = "spring-boot-properties"
-const YAML_LANGUAGE_ID = "spring-boot-properties-yaml"
 const JAVA_LANGUAGE_ID = "java"
 const XML_LANGUAGE_ID = "xml"
-const FACTORIES_LANGUAGE_ID = "spring-factories"
-const JPA_QUERY_PROPERTIES_LANGUAGE_ID = "jpa-query-properties"
 
 const STOP_ASKING = "Stop Asking"
 
@@ -79,22 +78,7 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
                 "documentSymbol"
             ],
             documentSelector: [
-                {
-                    language: PROPERTIES_LANGUAGE_ID,
-                    scheme: 'file'
-                },
-                {
-                    language: YAML_LANGUAGE_ID,
-                    scheme: 'file'
-                },
-                {
-                    language: FACTORIES_LANGUAGE_ID,
-                    scheme: 'file'
-                },
-                {
-                    language: JPA_QUERY_PROPERTIES_LANGUAGE_ID,
-                    scheme: 'file'
-                },
+                ...configFileSelector,
                 {
                     language: XML_LANGUAGE_ID,
                     scheme: 'file'
@@ -111,7 +95,7 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
             synchronize: {
                 configurationSection: ['boot-java', 'spring-boot', 'http']
             },
-            middleware: buildCommandsMiddleware,
+            middleware: { ...buildCommandsMiddleware, ...languageIdMiddleware },
             initializationOptions: () => ({
                 workspaceFolders: workspace.workspaceFolders ? workspace.workspaceFolders.map(f => f.uri.toString()) : null,
                 // Do not enable JDT classpath listeners at the startup - classpath service would enable it later if needed based on the Java extension mode
@@ -123,48 +107,12 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
         highlightCodeLensSettingKey: 'boot-java.highlight-codelens.on'
     }
 
+    let legacyFiletypes: Disposable | undefined
+
     return commons.activate(options, context).then(client => {
         // @Note that the name of this command is hard coded in the spring boot extensions and is expected to be exactly - vscode-spring-boot.ls.start
         context.subscriptions.push(commands.registerCommand('vscode-spring-boot.ls.start', () => client.start().then(() => {
             console.log(`Starting spring-boot server`)
-
-            // TODO: workaround with filetypes for https://github.com/neoclide/coc.nvim/issues/5112,
-            // other language servers which rely on the correct ft will not work, namely - yaml/yml
-            workspace.registerAutocmd({
-                event: ["BufRead", "BufNewFile"],
-                callback: async () => {
-                    await nvim.exec(`set ft=${YAML_LANGUAGE_ID}`)
-                    await nvim.exec("setl syntax=yaml")
-                },
-                pattern: "application*.yml,bootstrap*.yml,application*.yaml,bootstrap*.yaml"
-            })
-
-            workspace.registerAutocmd({
-                event: ["BufRead", "BufNewFile"],
-                callback: async () => {
-                    await nvim.exec(`set ft=${PROPERTIES_LANGUAGE_ID}`)
-                    await nvim.exec("setl syntax=jproperties")
-                },
-                pattern: "application*.properties,bootstrap*.properties"
-            })
-
-            workspace.registerAutocmd({
-                event: ["BufRead", "BufNewFile"],
-                callback: async () => {
-                    await nvim.exec(`set ft=${FACTORIES_LANGUAGE_ID}`)
-                    await nvim.exec("setl syntax=jproperties")
-                },
-                pattern: "spring*.factories"
-            })
-
-            workspace.registerAutocmd({
-                event: ["BufRead", "BufNewFile"],
-                callback: async () => {
-                    await nvim.exec(`set ft=${JPA_QUERY_PROPERTIES_LANGUAGE_ID}`)
-                    await nvim.exec("setl syntax=jproperties")
-                },
-                pattern: "jpa*.properties"
-            })
 
             services.registerLanguageClient(client)
             registerClasspathService(client)
@@ -172,6 +120,16 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
 
             // Force classpath listener to be enabled. Boot LS can only be launched iff classpath is available and there Spring-Boot on the classpath somewhere.
             commands.executeCommand('sts.vscode-spring-boot.enableClasspathListening', true)
+
+            // the server registers completion for the spring language ids right after the start, older coc versions do not
+            // route these registrations through the middleware, fallback to forcing the spring language ids as filetypes
+            setTimeout(() => {
+                if (!isRegistrationHookSupported() && !legacyFiletypes) {
+                    logToSpringBootOutput('Dynamic registration middleware not supported by coc, forcing spring filetypes on configuration files')
+                    legacyFiletypes = registerLegacyFiletypes()
+                    context.subscriptions.push(legacyFiletypes)
+                }
+            }, 10000)
         })))
         context.subscriptions.push(commands.registerCommand('vscode-spring-boot.ls.stop', () => client.stop()))
 
