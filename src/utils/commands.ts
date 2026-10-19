@@ -9,7 +9,7 @@ export function registerCommands(context: coc.ExtensionContext) {
     context.subscriptions.push(
         coc.commands.registerCommand("sts.open.url", openUrl, null, true),
         coc.commands.registerCommand("vscode-spring-boot.open.url", openUrl, null, true),
-        coc.commands.registerCommand("springboot.open.url", openUrl),
+        coc.commands.registerCommand("springboot.open.url", openUrl, null, true),
         coc.commands.registerCommand("sts.showHoverAtPosition", showHoverAtPosition, null, true),
         coc.commands.registerCommand("boot-ls.client.set-configuration", setConfiguration, null, true),
     )

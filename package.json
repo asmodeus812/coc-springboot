@@ -77,10 +77,6 @@
                 "title": "Set Log Levels"
             },
             {
-                "command": "springboot.open.url",
-                "title": "Open Boot App Page URL"
-            },
-            {
                 "command": "springboot.props-to-yaml",
                 "title": "Convert .properties to .yaml"
             },
