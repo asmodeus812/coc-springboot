@@ -2,7 +2,7 @@
     "name": "coc-springboot",
     "version": "0.1.22",
     "description": "Coc spring boot language server extension client",
-    "license": "MIT",
+    "license": "GPL-3.0-only",
     "main": "lib/index.js",
     "repository": {
         "type": "git",
