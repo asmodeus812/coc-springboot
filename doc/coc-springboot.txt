@@ -1,0 +1,236 @@
+*coc-springboot.txt*   Spring Boot language support for coc.nvim
+
+
+                      COC-SPRINGBOOT REFERENCE MANUAL
+
+
+Spring Boot extension for coc.nvim     *coc-springboot* *coc-springboot-intro*
+
+coc-springboot brings the Spring Boot language server of the Spring Tools
+project (here "the server") to coc.nvim. It adds Spring support to Java files,
+to Spring Boot `.properties` and `.yml` configuration files and to Spring
+factories files: symbol search for Spring elements, completion, hover,
+validation, and live data from running Spring Boot applications.
+
+This page describes how to use the extension. Requirements, installation,
+setup and settings are in the README of the extension. The extension adds
+this page to 'runtimepath' when it is activated, no |:helptags| is needed.
+
+                                      Type |gO| to see the table of contents.
+
+==============================================================================
+GETTING STARTED                                         *coc-springboot-start*
+
+Open a Java file of a Spring Boot project built with Maven or Gradle. The
+server starts when coc-java has loaded the project; you do not start it
+yourself. It works on these files:
+- Java files, also library sources that coc-java opens.
+- XML files, for Spring XML configuration.
+- `application*.properties` and `bootstrap*.properties`.
+- `application*.yml`, `application*.yaml`, `bootstrap*.yml` and
+  `bootstrap*.yaml`.
+- `*.factories`, the Spring factories files.
+- `jpa-named-queries.properties`, the JPA named queries.
+
+Configuration files keep their filetype (`yaml`, `jproperties`), so other
+extensions such as coc-yaml keep working on them.
+
+To restart the server, run |coc-springboot-command-vscode-spring-boot.ls.stop|
+and then |coc-springboot-command-vscode-spring-boot.ls.start|. If the server
+does not start, see the README.
+
+==============================================================================
+EDITING                                               *coc-springboot-editing*
+
+In Java files:
+- The workspace symbol search (|coc-list-symbols|) takes Spring queries: `@/`
+  lists the request mappings, `@+` the beans, `@>` the functions and `@` all
+  Spring annotations. `//` lists the request mappings of all running Spring
+  Boot applications and opens the selected endpoint in the browser.
+- The completion menu offers code templates for `@GetMapping`, `@PostMapping`
+  and `@PutMapping`.
+- Spring annotations get completion: property keys for `@Value`, scope names
+  for `@Scope`.
+- With live data, hovers over Spring annotations show data from the running
+  application, see |coc-springboot-live-data|.
+
+In `.properties` and `.yml` files the server knows the Spring Boot properties
+of your project's libraries. It offers them in completion and hover and
+validates the file; problems show as diagnostics (|coc-diagnostics|). The
+severity of each problem is a setting, see the README.
+
+If your project uses a shared properties metadata file, run
+|coc-springboot-command-springboot.properties.reload| after you change it. In
+Spring Modulith projects, run
+|coc-springboot-command-springboot.spring.modulith.metadata.refresh| to update
+the Modulith metadata.
+
+==============================================================================
+LIVE DATA                                           *coc-springboot-live-data*
+
+Live data is what a running Spring Boot application reports: request mappings,
+active profiles, beans and their wiring, and the conditions it evaluated. It
+shows in hovers, highlights and code lenses.
+
+To use it:
+1. Start the application, prepared as the README describes.
+2. Run |coc-springboot-command-springboot.live-hover.connect| and pick "Show
+   Live Data from: {app}".
+3. Hover over the annotated code: `@Profile` shows the active profiles,
+   `@Component`, `@Bean` and `@Autowired` the beans and their wiring,
+   `@ConditionalOn...` the conditions and how they were evaluated. Links to
+   request mappings open in the browser.
+4. Run the command again to refresh or hide the live data.
+
+Code with live data is highlighted with the highlight group
+`CocSpringBootHighlight`, linked by default to `DiffAdd`; redefine it to
+change the look. A highlight shows only while the text it belongs to is
+unchanged.
+
+The same code gets code lenses (|coc-code-lens|) with a summary, for example
+the beans wired into a component or the evaluated conditions. Running a lens
+shows its hover. To turn them off, see |coc-springboot-code-lenses|.
+
+To change the log level of a logger in the running application, run
+|coc-springboot-command-springboot.set.log-levels|.
+
+==============================================================================
+BUILD LENSES                                     *coc-springboot-build-lenses*
+
+The server offers code lenses and code actions that run a Maven goal or a
+Gradle build, for example to refresh the generated metadata of Spring Data AOT
+repositories. No Maven or Gradle extension for coc.nvim is needed.
+
+A build:
+- runs the wrapper `mvnw` or `gradlew` (`mvnw.cmd` or `gradlew.bat` on
+  Windows), searched from the project directory upwards, otherwise `mvn` or
+  `gradle` from `PATH`,
+- shows a progress message; cancel it to stop the build,
+- reports "{title} finished successfully", or shows the error "{title} failed,
+  check the 'SpringBoot Build' output for details" and opens that output.
+
+==============================================================================
+CODE LENSES                                       *coc-springboot-code-lenses*
+
+Java files get these code lenses, each kind with its own setting:
+- live data summaries, see |coc-springboot-live-data|:
+  `boot-java.highlight-codelens.on`
+- the AOT generated query over Spring Data query methods, with the build
+  lens that refreshes it: `boot-java.java.codelens-over-query-methods`
+- web configuration details on controller classes:
+  `boot-java.java.codelens-web-configs-on-controller-classes`
+
+All of them are coc.nvim code lenses, so `codeLens.enable` hides them all.
+It can be set per language in `coc-settings.json`, for example for Java:
+    `"[java]": {"codeLens.enable": false}`
+
+==============================================================================
+MCP SERVER                                                *coc-springboot-mcp*
+
+The server can run an embedded MCP server for AI assistants. It is off by
+default (`boot-java.ai.mcp-server-enabled`), so messages of the server about
+MCP, for example that it is not configured, can be ignored. When it is on, an
+MCP client connects to `http://localhost:{port}/mcp`, where {port} is
+`boot-java.ai.mcp-server-port`. See the README.
+
+==============================================================================
+JAR LINKS                                           *coc-springboot-jar-links*
+
+Links of the form `spring-boot-ls:file:/path/library.jar!/path/in/jar` open
+the file from the jar in a read-only buffer, with the filetype of the file. If
+the file cannot be loaded the extension shows the error "Unable to load
+{link}".
+
+==============================================================================
+CONVERSION                                         *coc-springboot-conversion*
+
+|coc-springboot-command-springboot.props-to-yaml| and
+|coc-springboot-command-springboot.yaml-to-props| convert Spring Boot
+configuration between `.properties` and YAML. The result is a new file next to
+the source; no existing file is overwritten. To replace the source file
+instead, set `spring.tools.properties.replace-converted-file`, see the README.
+
+==============================================================================
+COMMANDS                                             *coc-springboot-commands*
+
+Run a command with `:CocCommand {id}` (|:CocCommand|). The extension defines
+no mappings.
+
+------------------------------------------------------------------------------
+SERVER COMMANDS                               *coc-springboot-commands-server*
+
+                          *coc-springboot-command-vscode-spring-boot.ls.start*
+:CocCommand vscode-spring-boot.ls.start
+Starts the server, for example after
+|coc-springboot-command-vscode-spring-boot.ls.stop|.
+
+                           *coc-springboot-command-vscode-spring-boot.ls.stop*
+:CocCommand vscode-spring-boot.ls.stop
+Stops the server.
+
+                         *coc-springboot-command-springboot.properties.reload*
+:CocCommand springboot.properties.reload
+Reloads the shared properties metadata file. Shows "Reloading common
+properties metadata" when the server reloads it. Set the file with
+`boot-java.common.properties-metadata`, see the README.
+
+          *coc-springboot-command-springboot.spring.modulith.metadata.refresh*
+:CocCommand springboot.spring.modulith.metadata.refresh
+Refreshes the Spring Modulith metadata of a project. With one Modulith project
+it refreshes that project; with several it asks "Select the target project."
+in a picker, and cancelling the picker refreshes nothing; with none it shows
+the error "No Spring Modulith projects found".
+
+------------------------------------------------------------------------------
+LIVE DATA COMMANDS                              *coc-springboot-commands-live*
+
+Both commands show the error "No Spring Boot project found. Action is only
+available for Spring Boot Projects" when the server is not running, and "No
+running Spring Boot Apps found" when no application is running.
+
+                        *coc-springboot-command-springboot.live-hover.connect*
+:CocCommand springboot.live-hover.connect
+Shows, refreshes or hides the live data of a running Spring Boot application.
+Searches for running applications ("Searching for running Spring Boot
+Apps...") and opens the picker "Select action for running Spring Boot App".
+Each item reads `Show Live Data from: {app}`, `Refresh Live Data from: {app}`
+or `Hide Live Data from: {app}`, depending on whether the application is
+connected, with the project name as description.
+
+                            *coc-springboot-command-springboot.set.log-levels*
+:CocCommand springboot.set.log-levels
+Changes the log level of a logger in a running Spring Boot application. Offers
+the applications that are connected or can be connected, and asks in three
+steps:
+1. The application, in the picker "Select running Spring Boot App". With a
+   single application it skips this step.
+2. The logger, in the picker "Select Logger". Each item shows the logger name
+   and its effective level.
+3. The level, in the picker "Select Level for {logger}", with the levels the
+   application reports.
+
+Then it shows "The Log level for {logger} has been updated from {old} to
+{new}". When the loggers cannot be fetched it shows the error "Failed to fetch
+loggers for the process {key}", and when the application reports none "No
+loggers were reported by the process {key}".
+
+------------------------------------------------------------------------------
+CONVERSION COMMANDS                          *coc-springboot-commands-convert*
+
+                             *coc-springboot-command-springboot.props-to-yaml*
+:CocCommand springboot.props-to-yaml {target}?
+Converts a `.properties` file to YAML. {target} is a path or a URI. Without it
+the command converts the current buffer when its name ends in `.properties`,
+otherwise it shows the error "No '.properties' file selected". The result is
+`{name}.yml` next to the source; when that file exists it is `{name}-1.yml`,
+then `{name}-2.yml`, and so on.
+
+                             *coc-springboot-command-springboot.yaml-to-props*
+:CocCommand springboot.yaml-to-props {target}?
+Converts a YAML file to `.properties`. {target} is a path or a URI. Without it
+the command converts the current buffer when its name ends in `.yml` or
+`.yaml`, otherwise it shows the error "No '.yaml' file selected". The result
+is `{name}.properties` next to the source; when that file exists it is
+`{name}-1.properties`, then `{name}-2.properties`, and so on.
+
+ vim:tw=78:ts=8:sw=4:sts=4:et:ft=help:norl:

@@ -20,6 +20,7 @@ import * as setLogLevelUi from "./set-log-levels-ui"
 import { buildCommandsMiddleware, registerBuildCommands } from "./build-commands"
 import { configFileSelector, isRegistrationHookSupported, languageIdMiddleware, registerLegacyFiletypes } from "./language-ids"
 import { logToSpringBootOutput } from "./utils/logging"
+import { registerHelp } from "./help"
 
 const JAVA_LANGUAGE_ID = "java"
 const XML_LANGUAGE_ID = "xml"
@@ -27,6 +28,8 @@ const XML_LANGUAGE_ID = "xml"
 const STOP_ASKING = "Stop Asking"
 
 export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
+    registerHelp(context).catch(error => logToSpringBootOutput(`Unable to register the help page: ${error}`))
+
     const specificVmArgs = [
         "-Dspring.config.location=classpath:/application.properties",
         "-Djdk.util.zip.disableZip64ExtraFieldValidation=true"
