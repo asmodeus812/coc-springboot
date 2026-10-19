@@ -57,6 +57,10 @@
                 "title": "Start Spring Boot Language Server"
             },
             {
+                "command": "vscode-spring-boot.ls.stop",
+                "title": "Stop Spring Boot Language Server"
+            },
+            {
                 "command": "springboot.properties.reload",
                 "title": "Reload Shared Properties Metadata"
             },
