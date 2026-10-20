@@ -162,10 +162,15 @@ export async function activate(options: ActivatorOptions, context: coc.Extension
         let javaExecutablePath = jvm.getJavaExecutable()
         clientOptions?.outputChannel?.appendLine("Found java executable: " + javaExecutablePath)
         clientOptions?.outputChannel?.appendLine("isJavaEightOrHigher => true")
-        if (process.env['SPRING_LS_USE_SOCKET']) {
-            return setupLanguageClient(location, createServerOptionsForPortComm(location, options, context, jvm), options, context)
-        } else {
-            return setupLanguageClient(location, createServerOptions(location, options, context, jvm), options, context)
+        try {
+            if (process.env['SPRING_LS_USE_SOCKET']) {
+                return setupLanguageClient(location, createServerOptionsForPortComm(location, options, context, jvm), options, context)
+            } else {
+                return setupLanguageClient(location, createServerOptions(location, options, context, jvm), options, context)
+            }
+        } catch (error) {
+            coc.window.showErrorMessage("Unable to launch the spring boot language server: " + error)
+            throw error
         }
     }
 }
