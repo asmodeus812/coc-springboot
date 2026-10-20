@@ -1,4 +1,4 @@
-import { ExtensionContext, LanguageClient, QuickPickItem, commands, window } from 'coc.nvim'
+import { ExtensionContext, LanguageClient, QuickPickItem, State, commands, window } from 'coc.nvim'
 
 export const CONNECT_CMD = "sts/livedata/connect"
 export const DISCONNECT_CMD = "sts/livedata/disconnect"
@@ -60,7 +60,7 @@ async function liveHoverConnectHandler() {
 
 export function whenStarted(client: LanguageClient, handler: () => Promise<void>) {
     return () => {
-        if (client.started) {
+        if (client.getPublicState() === State.Running) {
             return handler()
         } else {
             window.showErrorMessage("No Spring Boot project found. Action is only available for Spring Boot Projects")
