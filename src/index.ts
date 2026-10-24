@@ -5,6 +5,7 @@ import {
     commands,
     window,
     workspace,
+    ConfigurationTarget,
     Disposable,
     ExtensionContext,
 } from 'coc.nvim'
@@ -62,7 +63,7 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
                     + 'A full JDK is required to attach to locally running Spring Boot apps, hence live process information (live hovers and live metrics) is unavailable. All other features work as usual.',
                     STOP_ASKING).then(selection => {
                         if (selection === STOP_ASKING) {
-                            options.workspaceOptions.update('checkJVM', false)
+                            options.workspaceOptions.update('checkJVM', false, ConfigurationTarget.Global)
                         }
                     })
             }
