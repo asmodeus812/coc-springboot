@@ -88,7 +88,7 @@ function getSpringUserDefinedJavaHome(wsOpts: coc.WorkspaceConfiguration, log: c
     let javaHome: string | undefined = undefined
     if (wsOpts) {
         let javaOptions: JavaOptions | undefined = wsOpts.get("java")
-        javaHome = javaOptions?.home
+        javaHome = javaOptions?.home && coc.workspace.expand(javaOptions.home)
     }
     if (!javaHome) {
         log.appendLine('"spring-boot.ls.java.home" setting not specified or empty value')
