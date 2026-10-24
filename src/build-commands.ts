@@ -49,6 +49,17 @@ function getBuildOutput(): OutputChannel {
     return buildOutput
 }
 
+// windows runs the wrappers and the build tools through their .cmd / .bat scripts, which need a shell
+const WINDOWS = process.platform === 'win32'
+
+function toolName(name: string, windowsExtension: string): string {
+    return WINDOWS ? name + windowsExtension : name
+}
+
+function quoteForShell(arg: string): string {
+    return WINDOWS && /\s/.test(arg) ? `"${arg}"` : arg
+}
+
 function findWrapper(startDir: string, name: string): string | undefined {
     for (let dir = startDir; dir !== path.dirname(dir); dir = path.dirname(dir)) {
         const wrapper = path.join(dir, name)
@@ -88,7 +99,7 @@ async function runBuild(title: string, executable: string, args: string[], cwd: 
     const output = getBuildOutput()
     output.appendLine(`> ${executable} ${args.join(' ')} (in ${cwd})`)
     const success = await window.withProgress({ title, cancellable: true }, (_progress, token) => new Promise<boolean>(resolve => {
-        const child = spawn(executable, args, { cwd, env: Object.assign({}, process.env, env || {}) })
+        const child = spawn(quoteForShell(executable), args.map(quoteForShell), { cwd, env: Object.assign({}, process.env, env || {}), shell: WINDOWS })
         child.stdout.on('data', data => output.append(data.toString()))
         child.stderr.on('data', data => output.append(data.toString()))
         child.on('error', err => {
@@ -112,7 +123,7 @@ async function runBuild(title: string, executable: string, args: string[], cwd: 
 
 async function runMavenGoal(buildFile: string, goal: string, env?: { [key: string]: string }): Promise<boolean> {
     const projectDir = path.dirname(buildFile)
-    const executable = findWrapper(projectDir, 'mvnw') || 'mvn'
+    const executable = findWrapper(projectDir, toolName('mvnw', '.cmd')) || toolName('mvn', '.cmd')
     const args = ['-f', buildFile, ...goal.split(/\s+/).filter(g => g.length > 0)]
     const started = Date.now()
     const success = await runBuild(`Maven ${goal}`, executable, args, projectDir, env)
@@ -124,7 +135,7 @@ async function runMavenGoal(buildFile: string, goal: string, env?: { [key: strin
 
 async function runGradleBuild(buildFile: string, command: string, env?: { [key: string]: string }, options?: BuildOptions): Promise<boolean> {
     const projectDir = path.dirname(buildFile)
-    const executable = findWrapper(projectDir, 'gradlew') || 'gradle'
+    const executable = findWrapper(projectDir, toolName('gradlew', '.bat')) || toolName('gradle', '.bat')
     const args = ['-p', projectDir, ...command.split(/\s+/).filter(c => c.length > 0)]
     const started = Date.now()
     const success = await runBuild(`Gradle ${command}`, executable, args, projectDir, env)
