@@ -116,7 +116,7 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
             console.log(`Starting spring-boot server`)
 
             services.registerLanguageClient(client)
-            registerClasspathService(client)
+            registerClasspathService(client, context)
             registerJavaDataService(client)
 
             // Force classpath listener to be enabled. Boot LS can only be launched iff classpath is available and there Spring-Boot on the classpath somewhere.
