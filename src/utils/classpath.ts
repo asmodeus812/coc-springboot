@@ -12,7 +12,7 @@ export function getJavaExtension(): coc.Extension<any> | undefined {
     return java
 }
 
-export function registerClasspathService(client: coc.LanguageClient): void {
+export function registerClasspathService(client: coc.LanguageClient, context: coc.ExtensionContext): void {
     const javaExt = getJavaExtension()
     const javaApi = javaExt?.exports;
 
@@ -31,7 +31,7 @@ export function registerClasspathService(client: coc.LanguageClient): void {
 
     if (javaApi) {
         coc.commands.executeCommand(CMD_STS_ENABLE_CLASSPATH_LISTENER, javaApi.serverMode === JDT_SERVER_STANDARD_MODE);
-        javaApi.onDidServerModeChange(() => coc.commands.executeCommand(CMD_STS_ENABLE_CLASSPATH_LISTENER, javaApi.serverMode === JDT_SERVER_STANDARD_MODE));
+        context.subscriptions.push(javaApi.onDidServerModeChange(() => coc.commands.executeCommand(CMD_STS_ENABLE_CLASSPATH_LISTENER, javaApi.serverMode === JDT_SERVER_STANDARD_MODE)));
     }
 }
 
