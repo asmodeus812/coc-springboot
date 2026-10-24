@@ -16,7 +16,7 @@ export function startPropertiesConversionSupport(extension: ExtensionContext) {
                 window.showErrorMessage("No '.properties' file selected");
                 return;
             }
-            return await commands.executeCommand("sts/boot/props-to-yaml", uri.toString(), Uri.file(getTargetFile(uri.path, "yml")).toString(), shouldReplace());
+            return await commands.executeCommand("sts/boot/props-to-yaml", uri.toString(), Uri.file(getTargetFile(uri.fsPath, "yml")).toString(), shouldReplace());
         }),
 
         commands.registerCommand('springboot.yaml-to-props', async (target?: string | Uri) => {
@@ -32,7 +32,7 @@ export function startPropertiesConversionSupport(extension: ExtensionContext) {
                 window.showErrorMessage("No '.yaml' file selected");
                 return;
             }
-            return await commands.executeCommand("sts/boot/yaml-to-props", uri.toString(), Uri.file(getTargetFile(uri.path, "properties")).toString(), shouldReplace());
+            return await commands.executeCommand("sts/boot/yaml-to-props", uri.toString(), Uri.file(getTargetFile(uri.fsPath, "properties")).toString(), shouldReplace());
         })
     );
 }
