@@ -184,9 +184,17 @@ function registerJarContentLoader(context: ExtensionContext) {
 function registerMiscCommands(context: ExtensionContext) {
     context.subscriptions.push(
         commands.registerCommand('springboot.spring.modulith.metadata.refresh', async () => {
-            const modulithProjects: any = await commands.executeCommand('sts/modulith/projects')
+            let modulithProjects: any
+            let serverMissing = false
+            try {
+                modulithProjects = await commands.executeCommand('sts/modulith/projects')
+            } catch (error) {
+                serverMissing = true
+            }
             const projectNames: any[] = Object.keys(modulithProjects || {})
-            if (projectNames.length === 0) {
+            if (serverMissing) {
+                window.showWarningMessage('The Spring Boot language server is not running (or still starting)')
+            } else if (projectNames.length === 0) {
                 window.showErrorMessage('No Spring Modulith projects found')
             } else {
                 const projectName = projectNames.length === 1 ? projectNames[0] : await window.showQuickPick(

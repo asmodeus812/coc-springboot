@@ -179,7 +179,9 @@ properties metadata" when the server reloads it. Set the file with
 Refreshes the Spring Modulith metadata of a project. With one Modulith project
 it refreshes that project; with several it asks "Select the target project."
 in a picker, and cancelling the picker refreshes nothing; with none it shows
-the error "No Spring Modulith projects found".
+the error "No Spring Modulith projects found". When the Spring Boot language
+server is not running yet, or still starting, it shows the warning "The
+Spring Boot language server is not running (or still starting)".
 
 ------------------------------------------------------------------------------
 LIVE DATA COMMANDS                              *coc-springboot-commands-live*
