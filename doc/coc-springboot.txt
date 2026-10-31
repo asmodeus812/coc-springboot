@@ -95,6 +95,68 @@ To change the log level of a logger in the running application, run
 |coc-springboot-command-springboot.set.log-levels|.
 
 ==============================================================================
+REMOTE APPLICATIONS                               *coc-springboot-remote-apps*
+
+Applications running on this machine need no entry here. The language server
+finds them through Java's attach API when
+`boot-java.live-information.all-local-java-processes` is `true`, and only
+then.
+
+An application the server reaches through a URL instead (on another machine,
+in a container, behind a forwarded port) is listed in the setting
+`boot-java.remote-apps`, one object per application: >
+    "boot-java.remote-apps": [
+        {
+            "jmxurl": "service:jmx:rmi:///jndi/rmi://localhost:9010/jmxrmi",
+            "host": "localhost"
+        }
+    ]
+<
+This is the default: one application whose JMX port is reachable as
+`localhost:9010`.
+
+The fields:
+- `jmxurl`: how the server reaches the application. An address that starts
+  with `http` reads the actuator over HTTP, anything else is a JMX URL, as
+  above.
+- `host`: the host in the links to the application (request mappings, the
+  browser) and in its name in the picker.
+- `urlScheme` and `port`: the scheme and the HTTP port of the links to the
+  application, for example `http` and `8080`. They do not affect the
+  connection. Without `port`, the port the application reports is used.
+
+The server never connects these applications by itself. Connect one with
+|coc-springboot-command-springboot.live-hover.connect|, which lists it as
+"Show Live Data from: remote process - {host}". A connect that fails is
+retried `boot-java.live-information.fetch-data.max-retries` times (10), every
+`boot-java.live-information.fetch-data.retry-delay-in-seconds` seconds (3);
+then the server gives up, and the application can be connected again from
+the same command.
+
+What the application needs, given to its JVM when it starts:
+- JMX on port 9010: >
+    -Dcom.sun.management.jmxremote.port=9010
+    -Dcom.sun.management.jmxremote.rmi.port=9010
+    -Dcom.sun.management.jmxremote.authenticate=false
+    -Dcom.sun.management.jmxremote.ssl=false
+    -Djava.rmi.server.hostname=127.0.0.1
+<
+  JMX uses a second (RMI) port; giving it the JMX port keeps it to one port.
+  `java.rmi.server.hostname` is the host this machine connects back to: the
+  address it reaches the application on (`127.0.0.1` when the port is
+  forwarded to this machine).
+- the live data itself (applications on this machine need it as well):
+  `spring-boot-starter-actuator` on the classpath and >
+    -Dspring.jmx.enabled=true
+    -Dmanagement.endpoints.jmx.exposure.include=*
+<
+  Spring Boot leaves JMX off and exposes only the health endpoint by default.
+  For an `http` address, the endpoints exposed over HTTP instead:
+  `-Dmanagement.endpoints.web.exposure.include=*`.
+Without authentication, anyone who reaches the JMX port gets full JMX access
+to the JVM: keep the port reachable from this machine only.
+
+==============================================================================
 BUILD LENSES                                     *coc-springboot-build-lenses*
 
 The server offers code lenses and code actions that run a Maven goal or a

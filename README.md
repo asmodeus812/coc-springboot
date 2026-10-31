@@ -117,18 +117,17 @@ keys under `spring-boot.ls` and `boot-java.ai` that the extension reads when it 
 
 | Key | Type | Default | Effect |
 |---|---|---|---|
-| `boot-java.live-information.automatic-connection.on` | boolean | `true` | Connect to applications automatically over JMX. |
 | `boot-java.live-information.all-local-java-processes` | boolean | `false` | Look at all local Java processes for Spring Boot applications. Needed to find local applications (see [Preparing an application for live data](#preparing-an-application-for-live-data)). |
 | `boot-java.live-information.fetch-data.max-retries` | number | `10` | How often the server retries fetching live data before it gives up. |
 | `boot-java.live-information.fetch-data.retry-delay-in-seconds` | number | `3` | Seconds between those retries. |
-| `boot-java.remote-apps` | array | none | Remote applications the server polls for live data: objects with the required `jmxurl` and `host` and the optional `urlScheme` and `port` (see the example below). |
+| `boot-java.remote-apps` | array | one application on `localhost:9010` | Spring Boot applications the language server reaches through a URL (on another machine, in a container, behind a forwarded port), one object per application: `jmxurl` (an `http` address reads the actuator over HTTP, anything else is a JMX URL) and `host` are required, `urlScheme` and `port` (the links only) are optional. They are never connected automatically: connect one with `springboot.live-hover.connect`. See `:help coc-springboot-remote-apps`. |
 | `boot-java.highlight-codelens.on` | boolean | `true` | Show the live data code lenses. A change applies at once. |
 
 ```json
 {
     "boot-java.remote-apps": [
         {
-            "jmxurl": "service:jmx:rmi:///jndi/rmi://localhost:9111/jmxrmi",
+            "jmxurl": "service:jmx:rmi:///jndi/rmi://localhost:9010/jmxrmi",
             "host": "localhost"
         }
     ]

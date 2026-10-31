@@ -1,6 +1,6 @@
 {
     "name": "coc-springboot",
-    "version": "0.2.2",
+    "version": "0.2.3",
     "description": "Coc spring boot language server extension client",
     "license": "GPL-3.0-only",
     "main": "lib/index.js",
@@ -101,11 +101,6 @@
                         "default": true,
                         "description": "Reconciling Java Sources"
                     },
-                    "boot-java.live-information.automatic-connection.on": {
-                        "type": "boolean",
-                        "default": true,
-                        "description": "Live Information - Automatic addition of JVM arguments enabling JMX and Process Connection via JMX Enabled"
-                    },
                     "boot-java.live-information.all-local-java-processes": {
                         "type": "boolean",
                         "description": "Show all local JVM processes when connecting to Live Spring Boot App processes",
@@ -200,20 +195,33 @@
                     },
                     "boot-java.remote-apps": {
                         "type": "array",
+                        "default": [
+                            {
+                                "jmxurl": "service:jmx:rmi:///jndi/rmi://localhost:9010/jmxrmi",
+                                "host": "localhost"
+                            }
+                        ],
                         "items": {
                             "type": "object",
                             "properties": {
                                 "jmxurl": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "description": "How the language server reaches the application: an address that starts with `http` reads the actuator over HTTP, anything else is a JMX URL such as `service:jmx:rmi:///jndi/rmi://localhost:9010/jmxrmi`."
                                 },
                                 "host": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "description": "The host in the links to the application (request mappings, the browser) and in its name in the connect picker (`remote process - {host}`)."
                                 },
                                 "urlScheme": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "description": "The scheme of the links to the application, e.g. `http`. It does not affect the connection."
                                 },
                                 "port": {
-                                    "type": "number"
+                                    "type": [
+                                        "string",
+                                        "number"
+                                    ],
+                                    "description": "The HTTP port of the links to the application, e.g. `8080`. It does not affect the connection; without it, the port the application reports is used."
                                 }
                             },
                             "required": [
@@ -221,7 +229,7 @@
                                 "host"
                             ]
                         },
-                        "description": "Array of jmx urls pointing to remote spring boot applications to poll for live hover information. A typical url looks something like this: `service:jmx:rmi://localhost:9111/jndi/rmi://localhost:9111/jmxrmi`"
+                        "markdownDescription": "Spring Boot applications the language server reaches through a URL (on another machine, in a container, behind a forwarded port) to read live data from, one object per application. They are never connected automatically: connect one with `springboot.live-hover.connect`. The default lists one application on `localhost:9010`. Applications on this machine need no entry (see `boot-java.live-information.all-local-java-processes`). See `:help coc-springboot-remote-apps`."
                     },
                     "boot-java.modulith-project-tracking": {
                         "type": "boolean",
