@@ -117,6 +117,7 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
         // @Note that the name of this command is hard coded in the spring boot extensions and is expected to be exactly - vscode-spring-boot.ls.start
         context.subscriptions.push(commands.registerCommand('vscode-spring-boot.ls.start', () => client.start().then(() => {
             console.log(`Starting spring-boot server`)
+            window.showInformationMessage('Spring Boot language server started')
 
             services.registerLanguageClient(client)
             registerClasspathService(client, context)
@@ -134,8 +135,14 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
                     context.subscriptions.push(legacyFiletypes)
                 }
             }, 10000)
+        }, error => {
+            window.showErrorMessage(`Unable to start the Spring Boot language server: ${error}`)
         })))
-        context.subscriptions.push(commands.registerCommand('vscode-spring-boot.ls.stop', () => client.stop()))
+        context.subscriptions.push(commands.registerCommand('vscode-spring-boot.ls.stop', () => client.stop().then(() => {
+            window.showInformationMessage('Spring Boot language server stopped')
+        }, error => {
+            window.showErrorMessage(`Unable to stop the Spring Boot language server: ${error}`)
+        })))
 
         commons.registerCommands(context)
         registerJarContentLoader(context)
@@ -178,7 +185,7 @@ function registerMiscCommands(context: ExtensionContext) {
     context.subscriptions.push(
         commands.registerCommand('springboot.spring.modulith.metadata.refresh', async () => {
             const modulithProjects: any = await commands.executeCommand('sts/modulith/projects')
-            const projectNames: any[] = Object.keys(modulithProjects)
+            const projectNames: any[] = Object.keys(modulithProjects || {})
             if (projectNames.length === 0) {
                 window.showErrorMessage('No Spring Modulith projects found')
             } else {
@@ -187,15 +194,26 @@ function registerMiscCommands(context: ExtensionContext) {
                     { placeholder: "Select the target project." },
                 )
                 if (projectName) {
-                    commands.executeCommand('sts/modulith/metadata/refresh', modulithProjects[projectName])
+                    try {
+                        await commands.executeCommand('sts/modulith/metadata/refresh', modulithProjects[projectName])
+                        window.showInformationMessage(`Refreshed the Spring Modulith metadata of ${projectName}`)
+                    } catch (error) {
+                        window.showErrorMessage(`Unable to refresh the Spring Modulith metadata: ${error}`)
+                    }
                 }
             }
         }),
 
         commands.registerCommand('springboot.properties.reload', async () => {
-            const reloadOutput = await commands.executeCommand("sts/common-properties/reload")
-            if (reloadOutput) {
-                window.showInformationMessage('Reloading common properties metadata')
+            try {
+                const reloadOutput = await commands.executeCommand("sts/common-properties/reload")
+                if (reloadOutput) {
+                    window.showInformationMessage('Reloading common properties metadata')
+                } else {
+                    window.showWarningMessage('The Spring Boot language server did not reload the common properties metadata')
+                }
+            } catch (error) {
+                window.showErrorMessage(`Unable to reload the common properties metadata: ${error}`)
             }
         }),
     )
