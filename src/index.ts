@@ -1,8 +1,10 @@
 'use strict'
+import * as path from 'path'
 import {
     nvim,
     services,
     commands,
+    extensions,
     window,
     workspace,
     ConfigurationTarget,
@@ -114,8 +116,16 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
     let legacyFiletypes: Disposable | undefined
 
     return commons.activate(options, context).then(client => {
-        // @Note that the name of this command is hard coded in the spring boot extensions and is expected to be exactly - vscode-spring-boot.ls.start
-        context.subscriptions.push(commands.registerCommand('vscode-spring-boot.ls.start', () => client.start().then(() => {
+        // one start for whoever asks first: jdtls (vscode-spring-boot.ls.start) or the start once jdtls imported the projects
+        let starting: Promise<void> | undefined
+        const start = (): Promise<void> => {
+            starting = starting ?? client.start().then(started, error => {
+                starting = undefined
+                window.showErrorMessage(`Unable to start the Spring Boot language server: ${error}`)
+            })
+            return starting
+        }
+        const started = (): void => {
             console.log(`Starting spring-boot server`)
             window.showInformationMessage('Spring Boot language server started')
 
@@ -135,10 +145,14 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
                     context.subscriptions.push(legacyFiletypes)
                 }
             }, 10000)
-        }, error => {
-            window.showErrorMessage(`Unable to start the Spring Boot language server: ${error}`)
-        })))
+        }
+        // @Note that the name of this command is hard coded in the spring boot extensions and is expected to be exactly - vscode-spring-boot.ls.start
+        context.subscriptions.push(commands.registerCommand('vscode-spring-boot.ls.start', start))
+        // jdtls sends the start only once, after an event of its own that can pass before its spring plugin listens for
+        // it: start the server ourselves once jdtls has imported the projects and one of them has spring boot
+        startWhenJavaReady(start).catch(error => logToSpringBootOutput(`Start after the java import failed: ${error}`))
         context.subscriptions.push(commands.registerCommand('vscode-spring-boot.ls.stop', () => client.stop().then(() => {
+            starting = undefined
             window.showInformationMessage('Spring Boot language server stopped')
         }, error => {
             window.showErrorMessage(`Unable to stop the Spring Boot language server: ${error}`)
@@ -225,4 +239,31 @@ function registerMiscCommands(context: ExtensionContext) {
             }
         }),
     )
+}
+
+/**
+ * Waits until coc-java's jdtls has imported the projects (its `serverReady`), then starts the Spring Boot server when a
+ * project has a spring-boot jar on its classpath, the condition jdtls's spring plugin starts it on.
+ */
+async function startWhenJavaReady(start: () => Promise<void>): Promise<void> {
+    const java = extensions.getExtensionById<{ serverReady?: () => Promise<boolean> }>('coc-java')
+    const api = java ? (java.isActive ? java.exports : await java.activate()) : undefined
+    const ready: boolean = api?.serverReady ? await api.serverReady() : false
+    if (ready && await hasBootProject()) {
+        logToSpringBootOutput('Starting the Spring Boot server after the java import')
+        await start()
+    }
+}
+
+async function hasBootProject(): Promise<boolean> {
+    const run = (command: string, ...args: any[]): Promise<any> => commands.executeCommand('java.execute.workspaceCommand', command, ...args)
+    const projects: string[] = (await run('java.project.getAll').catch(() => [])) ?? []
+    let found: boolean = false
+    for (const uri of projects) {
+        if (!found) {
+            const result = await run('java.project.getClasspaths', uri, JSON.stringify({ scope: 'runtime' })).catch(() => undefined)
+            found = ((result?.classpaths ?? []) as string[]).some(entry => path.basename(entry).startsWith('spring-boot'))
+        }
+    }
+    return found
 }
