@@ -149,8 +149,20 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
         // @Note that the name of this command is hard coded in the spring boot extensions and is expected to be exactly - vscode-spring-boot.ls.start
         context.subscriptions.push(commands.registerCommand('vscode-spring-boot.ls.start', start))
         // jdtls sends the start only once, after an event of its own that can pass before its spring plugin listens for
-        // it: start the server ourselves once jdtls has imported the projects and one of them has spring boot
-        startWhenJavaReady(start).catch(error => logToSpringBootOutput(`Start after the java import failed: ${error}`))
+        // it: start the server ourselves once jdtls has imported the projects and one of them has spring boot, and again
+        // when coc-java imports projects or updates a classpath later
+        // one check at a time: an import sends several events in a row
+        let checking: boolean = false
+        const startIfBoot = (projects?: string[]): void => {
+            if (client.needsStart() && !checking) {
+                checking = true
+                startWhenJavaReady(start, projects)
+                    .catch(error => logToSpringBootOutput(`Start after the java import failed: ${error}`))
+                    .finally(() => { checking = false })
+            }
+        }
+        startIfBoot()
+        watchJavaProjects(startIfBoot, context)
         context.subscriptions.push(commands.registerCommand('vscode-spring-boot.ls.stop', () => client.stop().then(() => {
             starting = undefined
             window.showInformationMessage('Spring Boot language server stopped')
@@ -242,24 +254,47 @@ function registerMiscCommands(context: ExtensionContext) {
 }
 
 /**
+ * Calls `changed` with the projects coc-java imports or updates the classpath of, read from its API once it is active.
+ */
+async function watchJavaProjects(changed: (projects: string[]) => void, context: ExtensionContext): Promise<void> {
+    const java = extensions.getExtensionById<JavaEvents>('coc-java')
+    const api = java ? (java.isActive ? java.exports : await java.activate()) : undefined
+    if (api?.onDidProjectsImport) {
+        context.subscriptions.push(api.onDidProjectsImport(projects => changed(projects.map(uri => uri.toString()))))
+    }
+    if (api?.onDidClasspathUpdate) {
+        context.subscriptions.push(api.onDidClasspathUpdate(project => changed([project.toString()])))
+    }
+}
+
+/** The events of coc-java's API about the projects of the workspace, each with the root uri of the projects. */
+interface JavaEvents {
+    onDidProjectsImport?: (listener: (projects: { toString(): string }[]) => void) => Disposable
+    onDidClasspathUpdate?: (listener: (project: { toString(): string }) => void) => Disposable
+}
+
+/**
  * Waits until coc-java's jdtls has imported the projects (its `serverReady`), then starts the Spring Boot server when a
  * project has a spring-boot jar on its classpath, the condition jdtls's spring plugin starts it on.
  */
-async function startWhenJavaReady(start: () => Promise<void>): Promise<void> {
+async function startWhenJavaReady(start: () => Promise<void>, projects?: string[]): Promise<void> {
     const java = extensions.getExtensionById<{ serverReady?: () => Promise<boolean> }>('coc-java')
     const api = java ? (java.isActive ? java.exports : await java.activate()) : undefined
     const ready: boolean = api?.serverReady ? await api.serverReady() : false
-    if (ready && await hasBootProject()) {
+    if (ready && await hasBootProject(projects)) {
         logToSpringBootOutput('Starting the Spring Boot server after the java import')
         await start()
     }
 }
 
-async function hasBootProject(): Promise<boolean> {
+/**
+ * Whether one of `projects` (the root uris, all projects of the workspace when not given) has spring boot on its classpath.
+ */
+async function hasBootProject(projects?: string[]): Promise<boolean> {
     const run = (command: string, ...args: any[]): Promise<any> => commands.executeCommand('java.execute.workspaceCommand', command, ...args)
-    const projects: string[] = (await run('java.project.getAll').catch(() => [])) ?? []
+    const uris: string[] = projects ?? (await run('java.project.getAll').catch(() => []) ?? [])
     let found: boolean = false
-    for (const uri of projects) {
+    for (const uri of uris) {
         if (!found) {
             const result = await run('java.project.getClasspaths', uri, JSON.stringify({ scope: 'runtime' })).catch(() => undefined)
             found = ((result?.classpaths ?? []) as string[]).some(entry => path.basename(entry).startsWith('spring-boot'))
