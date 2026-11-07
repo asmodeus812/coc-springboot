@@ -2,9 +2,9 @@
 import PortFinder = require('portfinder')
 
 import * as coc from 'coc.nvim'
-import * as Path from 'path'
-import * as FS from 'fs'
-import * as Net from 'net'
+import * as Path from 'node:path'
+import * as FS from 'node:fs'
+import * as Net from 'node:net'
 import {
     LanguageClient, StreamInfo, ServerOptions, ExecutableOptions, Executable, LanguageClientOptions, Position
 } from 'coc.nvim'
@@ -152,12 +152,12 @@ export async function activate(options: ActivatorOptions, context: coc.Extension
         try {
             jvm = await finder(home as string, msg => clientOptions?.outputChannel?.appendLine(msg)) as JVM
         } catch (error) {
-            coc.window.showErrorMessage("Error while trying to find jvm: " + error)
+            void coc.window.showErrorMessage("Error while trying to find jvm: " + error)
             throw error
         }
         if (!jvm) {
-            coc.window.showErrorMessage("Couldn't locate java in $JAVA_HOME or $PATH")
-            return Promise.reject(new Error())
+            void coc.window.showErrorMessage("Couldn't locate java in $JAVA_HOME or $PATH")
+            throw new Error("Couldn't locate java in $JAVA_HOME or $PATH")
         }
         let javaExecutablePath = jvm.getJavaExecutable()
         clientOptions?.outputChannel?.appendLine("Found java executable: " + javaExecutablePath)
@@ -169,7 +169,7 @@ export async function activate(options: ActivatorOptions, context: coc.Extension
                 return setupLanguageClient(location, createServerOptions(location, options, context, jvm), options, context)
             }
         } catch (error) {
-            coc.window.showErrorMessage("Unable to launch the spring boot language server: " + error)
+            void coc.window.showErrorMessage("Unable to launch the spring boot language server: " + error)
             throw error
         }
     }
@@ -217,8 +217,7 @@ function createServerOptionsForPortComm(location: string, options: ActivatorOpti
                         const lsRoot = Path.resolve(location, explodedLsJarData.lsLocation)
 
                         const classpath: string[] = []
-                        classpath.push(Path.resolve(lsRoot, 'BOOT-INF/classes'))
-                        classpath.push(`${Path.resolve(lsRoot, 'BOOT-INF/lib')}${Path.sep}*`)
+                        classpath.push(Path.resolve(lsRoot, 'BOOT-INF/classes'), `${Path.resolve(lsRoot, 'BOOT-INF/lib')}${Path.sep}*`)
 
                         jvm.mainClassLaunch(explodedLsJarData.mainClass, classpath, args, processLaunchoptions)
                     } else {
@@ -253,8 +252,7 @@ function prepareJvmArgs(location: string, options: ActivatorOptions, context: co
         args.push(`-Dlogging.level.root=${rootLogLevel}`)
     }
     if (port && port > 0) {
-        args.push('-Dspring.lsp.client-port=' + port)
-        args.push('-Dserver.port=' + port)
+        args.push('-Dspring.lsp.client-port=' + port, '-Dserver.port=' + port)
     }
     if (isCheckingJVM(options.workspaceOptions) && options.checkjvm) {
         options.checkjvm(context, jvm)
@@ -277,7 +275,8 @@ function prepareJvmArgs(location: string, options: ActivatorOptions, context: co
         const explodedLsJarData = options.explodedLsJarData
         const lsRoot = Path.resolve(location, explodedLsJarData.lsLocation)
         if (explodedLsJarData.configFileName) {
-            args.push(`-Dspring.config.location=file:${Path.resolve(lsRoot, `BOOT-INF/classes/${explodedLsJarData.configFileName}`)}`)
+            const configFile = Path.resolve(lsRoot, `BOOT-INF/classes/${explodedLsJarData.configFileName}`)
+            args.push(`-Dspring.config.location=file:${configFile}`)
         }
     }
     return args
@@ -296,15 +295,12 @@ function addCpAndLauncherToJvmArgs(location: string, args: string[], options: Ac
         const lsRoot = Path.resolve(location, explodedLsJarData.lsLocation)
 
         const classpath: string[] = []
-        classpath.push(Path.resolve(lsRoot, 'BOOT-INF/classes'))
-        classpath.push(`${Path.resolve(lsRoot, 'BOOT-INF/lib')}${Path.sep}*`)
+        classpath.push(Path.resolve(lsRoot, 'BOOT-INF/classes'), `${Path.resolve(lsRoot, 'BOOT-INF/lib')}${Path.sep}*`)
 
-        args.unshift(classpath.join(Path.delimiter))
-        args.unshift('-cp')
+        args.unshift('-cp', classpath.join(Path.delimiter))
         args.push(explodedLsJarData.mainClass)
     } else {
-        args.push('-jar')
-        args.push(launcher)
+        args.push('-jar', launcher)
     }
 }
 
@@ -321,7 +317,7 @@ function hasVmArg(argPrefix: string, vmargs?: string[]): boolean {
 
 function findServerJar(jarsDir: any): string | undefined {
     let serverJars = FS.readdirSync(jarsDir).filter(jar =>
-        jar.indexOf('language-server') >= 0 &&
+        jar.includes('language-server') &&
         jar.endsWith(".jar")
     )
     if (serverJars.length == 0) {

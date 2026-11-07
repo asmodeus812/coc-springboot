@@ -34,8 +34,8 @@ function normalizeUri(uri: string): string {
  */
 export class HighlightService implements Disposable {
 
-    private highlights: Map<string, HighlightParams> = new Map()
-    private disposables: Disposable[] = []
+    private readonly highlights: Map<string, HighlightParams> = new Map()
+    private readonly disposables: Disposable[] = []
 
     constructor() {
         workspace.nvim.command(`highlight default link ${HIGHLIGHT_GROUP} DiffAdd`, true)
@@ -56,8 +56,8 @@ export class HighlightService implements Disposable {
     private refresh(uri: string): void {
         const document = workspace.getDocument(uri)
         const params = this.highlights.get(normalizeUri(uri))
-        if (document && document.attached) {
-            const ranges = params && params.doc.version === document.version ? (params.codeLenses || []).map(cl => cl.range) : []
+        if (document?.attached) {
+            const ranges = params?.doc.version === document.version ? (params.codeLenses || []).map(cl => cl.range) : []
             document.buffer.clearNamespace(HIGHLIGHT_NAMESPACE)
             if (ranges.length > 0) {
                 document.buffer.highlightRanges(HIGHLIGHT_NAMESPACE, HIGHLIGHT_GROUP, ranges)
@@ -80,8 +80,8 @@ export class HighlightService implements Disposable {
  */
 export class HighlightCodeLensProvider implements CodeLensProvider {
 
-    private highlights: Map<string, HighlightParams> = new Map()
-    private _onDidChangeCodeLenses = new Emitter<void>()
+    private readonly highlights: Map<string, HighlightParams> = new Map()
+    private readonly _onDidChangeCodeLenses = new Emitter<void>()
 
     public isEnabled: () => boolean = () => true
 
@@ -103,7 +103,7 @@ export class HighlightCodeLensProvider implements CodeLensProvider {
 
     public provideCodeLenses(document: TextDocument): ProviderResult<CodeLens[]> {
         const params = this.highlights.get(normalizeUri(document.uri))
-        if (this.isEnabled() && params && params.doc.version === document.version) {
+        if (this.isEnabled() && params?.doc.version === document.version) {
             return (params.codeLenses || []).filter(cl => cl.command).map(cl => ({ range: cl.range, command: cl.command }))
         }
         return []

@@ -13,13 +13,13 @@ import {
 } from "./notification";
 
 export class ApiManager {
-    public api: ExtensionAPI;
-    private onDidLiveProcessConnectEmitter: Emitter<LiveProcess> = new Emitter<LiveProcess>();
-    private onDidLiveProcessDisconnectEmitter: Emitter<LiveProcess> = new Emitter<LiveProcess>();
-    private onDidLiveProcessUpdateEmitter: Emitter<LiveProcess> = new Emitter<LiveProcess>();
-    private onDidLiveProcessGcPausesMetricsUpdateEmitter: Emitter<LiveProcess> = new Emitter<LiveProcess>();
-    private onDidLiveProcessMemoryMetricsUpdateEmitter: Emitter<LiveProcess> = new Emitter<LiveProcess>();
-    private onSpringIndexUpdateEmitter: Emitter<IndexUpdateDetails> = new Emitter<IndexUpdateDetails>();
+    public readonly api: ExtensionAPI;
+    private readonly onDidLiveProcessConnectEmitter: Emitter<LiveProcess> = new Emitter<LiveProcess>();
+    private readonly onDidLiveProcessDisconnectEmitter: Emitter<LiveProcess> = new Emitter<LiveProcess>();
+    private readonly onDidLiveProcessUpdateEmitter: Emitter<LiveProcess> = new Emitter<LiveProcess>();
+    private readonly onDidLiveProcessGcPausesMetricsUpdateEmitter: Emitter<LiveProcess> = new Emitter<LiveProcess>();
+    private readonly onDidLiveProcessMemoryMetricsUpdateEmitter: Emitter<LiveProcess> = new Emitter<LiveProcess>();
+    private readonly onSpringIndexUpdateEmitter: Emitter<IndexUpdateDetails> = new Emitter<IndexUpdateDetails>();
 
     public constructor(client: LanguageClient) {
         const onDidLiveProcessConnect = this.onDidLiveProcessConnectEmitter.event;

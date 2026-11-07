@@ -38,7 +38,7 @@ async function setLogLevelHandler() {
                 cancellable: false
             }, () => commands.executeCommand('sts/livedata/getLoggers', processInfo, { "endpoint": "loggers" }))
         } catch (_error) {
-            window.showErrorMessage(`Failed to fetch loggers for the process ${processInfo.processKey}`)
+            void window.showErrorMessage(`Failed to fetch loggers for the process ${processInfo.processKey}`)
         }
         if (loggers) {
             await displayLoggers(loggers, processInfo.processKey)
@@ -53,7 +53,7 @@ async function selectRunningProcess(): Promise<ProcessCommandInfo | undefined> {
         .map(p => ({ label: p.label, description: p.projectName, commandInfo: p }))
 
     if (!items.length) {
-        window.showInformationMessage("No running Spring Boot Apps found")
+        void window.showInformationMessage("No running Spring Boot Apps found")
         return undefined
     }
     const chosen = items.length === 1 ? items[0] : await window.showQuickPick(items, { title: "Select running Spring Boot App" })
@@ -72,7 +72,7 @@ async function displayLoggers(processLoggersData: ProcessLoggersData, processKey
     })
 
     if (!items.length) {
-        window.showWarningMessage(`No loggers were reported by the process ${processKey}`)
+        void window.showWarningMessage(`No loggers were reported by the process ${processKey}`)
     } else {
         const chosenPackage = await window.showQuickPick(items, { title: "Select Logger" })
         if (chosenPackage) {
@@ -85,7 +85,7 @@ async function displayLoggers(processLoggersData: ProcessLoggersData, processKey
 }
 
 function logLevelUpdated(process: LiveProcessUpdatedLogLevel) {
-    window.showInformationMessage(`The Log level for ${process.packageName} has been updated from ${process.effectiveLevel} to ${process.configuredLevel}`)
+    void window.showInformationMessage(`The Log level for ${process.packageName} has been updated from ${process.effectiveLevel} to ${process.configuredLevel}`)
 }
 
 export function activate(client: LanguageClient, context: ExtensionContext) {

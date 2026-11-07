@@ -1,6 +1,6 @@
-import * as path from 'path'
-import * as fs from 'fs'
-import { spawn } from 'child_process'
+import * as path from 'node:path'
+import * as fs from 'node:fs'
+import { spawn } from 'node:child_process'
 import {
     CodeAction,
     CodeLens,
@@ -91,7 +91,7 @@ function notifyGeneratedMetadata(projectDir: string, since: number) {
     if (languageClient && files.length > 0) {
         languageClient.sendNotification('workspace/didChangeWatchedFiles', {
             changes: files.map(file => ({ uri: Uri.file(file).toString(), type: FileChangeType.Changed }))
-        })
+        }).catch(() => undefined)
     }
 }
 
@@ -99,7 +99,7 @@ async function runBuild(title: string, executable: string, args: string[], cwd: 
     const output = getBuildOutput()
     output.appendLine(`> ${executable} ${args.join(' ')} (in ${cwd})`)
     const success = await window.withProgress({ title, cancellable: true }, (_progress, token) => new Promise<boolean>(resolve => {
-        const child = spawn(quoteForShell(executable), args.map(quoteForShell), { cwd, env: Object.assign({}, process.env, env || {}), shell: WINDOWS })
+        const child = spawn(quoteForShell(executable), args.map(quoteForShell), { cwd, env: { ...process.env, ...env }, shell: WINDOWS })
         child.stdout.on('data', data => output.append(data.toString()))
         child.stderr.on('data', data => output.append(data.toString()))
         child.on('error', err => {
@@ -113,9 +113,9 @@ async function runBuild(title: string, executable: string, args: string[], cwd: 
         token.onCancellationRequested(() => child.kill())
     }))
     if (success) {
-        window.showInformationMessage(`${title} finished successfully`)
+        void window.showInformationMessage(`${title} finished successfully`)
     } else {
-        window.showErrorMessage(`${title} failed, check the 'SpringBoot Build' output for details`)
+        void window.showErrorMessage(`${title} failed, check the 'SpringBoot Build' output for details`)
         output.show(true)
     }
     return success

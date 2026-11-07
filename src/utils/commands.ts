@@ -18,10 +18,10 @@ export function registerCommands(context: coc.ExtensionContext) {
 async function openUrl(url: string | coc.Uri) {
     if (url) {
         const target = url.toString()
-        coc.window.showInformationMessage(`Opening ${target} with browser`)
+        void coc.window.showInformationMessage(`Opening ${target} with browser`)
         await coc.workspace.nvim.call('coc#ui#open_url', [target])
     } else {
-        coc.window.showErrorMessage('No url was provided to open in the browser')
+        void coc.window.showErrorMessage('No url was provided to open in the browser')
     }
 }
 

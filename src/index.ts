@@ -1,5 +1,5 @@
 'use strict'
-import * as path from 'path'
+import * as path from 'node:path'
 import {
     nvim,
     services,
@@ -58,17 +58,17 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
         checkjvm: (_, jvm: commons.JVM) => {
             let version = jvm.getMajorVersion()
             if (version < 21) {
-                throw Error(`Spring Tools Language Server requires Java 21 or higher to be launched. Current Java version is ${version}`)
+                throw new Error(`Spring Tools Language Server requires Java 21 or higher to be launched. Current Java version is ${version}`)
             }
 
             const missingModules = jvm.getMissingJdkModules()
             if (missingModules.length > 0) {
-                window.showWarningMessage(
+                void window.showWarningMessage(
                     `The Java runtime used by Spring Tools (${jvm.getJavaHome()}) does not provide the ${missingModules.join(' and ')} module${missingModules.length > 1 ? 's' : ''}. `
                     + 'A full JDK is required to attach to locally running Spring Boot apps, hence live process information (live hovers and live metrics) is unavailable. All other features work as usual.',
                     STOP_ASKING).then(selection => {
                         if (selection === STOP_ASKING) {
-                            options.workspaceOptions.update('checkJVM', false, ConfigurationTarget.Global)
+                            options.workspaceOptions.update('checkJVM', false, ConfigurationTarget.Global).then(undefined, error => logToSpringBootOutput(`Unable to stop asking about the JVM: ${error}`))
                         }
                     })
             }
@@ -121,13 +121,13 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
         const start = (): Promise<void> => {
             starting = starting ?? client.start().then(started, error => {
                 starting = undefined
-                window.showErrorMessage(`Unable to start the Spring Boot language server: ${error}`)
+                void window.showErrorMessage(`Unable to start the Spring Boot language server: ${error}`)
             })
             return starting
         }
         const started = (): void => {
             console.log(`Starting spring-boot server`)
-            window.showInformationMessage('Spring Boot language server started')
+            void window.showInformationMessage('Spring Boot language server started')
 
             services.registerLanguageClient(client)
             registerClasspathService(client, context)
@@ -135,6 +135,7 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
 
             // Force classpath listener to be enabled. Boot LS can only be launched iff classpath is available and there Spring-Boot on the classpath somewhere.
             commands.executeCommand('sts.vscode-spring-boot.enableClasspathListening', true)
+                .catch(error => logToSpringBootOutput(`Unable to enable the classpath listening: ${error}`))
 
             // the server registers completion for the spring language ids right after the start, older coc versions do not
             // route these registrations through the middleware, fallback to forcing the spring language ids as filetypes
@@ -162,12 +163,12 @@ export function activate(context: ExtensionContext): Promise<ExtensionAPI> {
             }
         }
         startIfBoot()
-        watchJavaProjects(startIfBoot, context)
+        watchProjects(startIfBoot, context)
         context.subscriptions.push(commands.registerCommand('vscode-spring-boot.ls.stop', () => client.stop().then(() => {
             starting = undefined
-            window.showInformationMessage('Spring Boot language server stopped')
+            void window.showInformationMessage('Spring Boot language server stopped')
         }, error => {
-            window.showErrorMessage(`Unable to stop the Spring Boot language server: ${error}`)
+            void window.showErrorMessage(`Unable to stop the Spring Boot language server: ${error}`)
         })))
 
         commons.registerCommands(context)
@@ -201,7 +202,7 @@ function registerJarContentLoader(context: ExtensionContext) {
                 await buffer.setOption('modifiable', false)
                 await nvim.command('filetype detect')
             } catch (error) {
-                window.showErrorMessage(`Unable to load ${uri}: ${error}`)
+                void window.showErrorMessage(`Unable to load ${uri}: ${error}`)
             }
         }
     }))
@@ -219,9 +220,9 @@ function registerMiscCommands(context: ExtensionContext) {
             }
             const projectNames: any[] = Object.keys(modulithProjects || {})
             if (serverMissing) {
-                window.showWarningMessage('The Spring Boot language server is not running (or still starting)')
+                void window.showWarningMessage('The Spring Boot language server is not running (or still starting)')
             } else if (projectNames.length === 0) {
-                window.showErrorMessage('No Spring Modulith projects found')
+                void window.showErrorMessage('No Spring Modulith projects found')
             } else {
                 const projectName = projectNames.length === 1 ? projectNames[0] : await window.showQuickPick(
                     projectNames,
@@ -230,9 +231,9 @@ function registerMiscCommands(context: ExtensionContext) {
                 if (projectName) {
                     try {
                         await commands.executeCommand('sts/modulith/metadata/refresh', modulithProjects[projectName])
-                        window.showInformationMessage(`Refreshed the Spring Modulith metadata of ${projectName}`)
+                        void window.showInformationMessage(`Refreshed the Spring Modulith metadata of ${projectName}`)
                     } catch (error) {
-                        window.showErrorMessage(`Unable to refresh the Spring Modulith metadata: ${error}`)
+                        void window.showErrorMessage(`Unable to refresh the Spring Modulith metadata: ${error}`)
                     }
                 }
             }
@@ -242,29 +243,48 @@ function registerMiscCommands(context: ExtensionContext) {
             try {
                 const reloadOutput = await commands.executeCommand("sts/common-properties/reload")
                 if (reloadOutput) {
-                    window.showInformationMessage('Reloading common properties metadata')
+                    void window.showInformationMessage('Reloading common properties metadata')
                 } else {
-                    window.showWarningMessage('The Spring Boot language server did not reload the common properties metadata')
+                    void window.showWarningMessage('The Spring Boot language server did not reload the common properties metadata')
                 }
             } catch (error) {
-                window.showErrorMessage(`Unable to reload the common properties metadata: ${error}`)
+                void window.showErrorMessage(`Unable to reload the common properties metadata: ${error}`)
             }
         }),
     )
 }
 
 /**
+ * Watches the java projects for `changed`, a failure to watch them is logged
+ */
+function watchProjects(changed: (projects: string[]) => void, context: ExtensionContext): void {
+    watchJavaProjects(changed, context)
+        .catch(error => logToSpringBootOutput(`Unable to watch the java projects: ${error}`))
+}
+
+/**
  * Calls `changed` with the projects coc-java imports or updates the classpath of, read from its API once it is active.
  */
 async function watchJavaProjects(changed: (projects: string[]) => void, context: ExtensionContext): Promise<void> {
-    const java = extensions.getExtensionById<JavaEvents>('coc-java')
-    const api = java ? (java.isActive ? java.exports : await java.activate()) : undefined
+    const api = await javaExports<JavaEvents>()
     if (api?.onDidProjectsImport) {
         context.subscriptions.push(api.onDidProjectsImport(projects => changed(projects.map(uri => uri.toString()))))
     }
     if (api?.onDidClasspathUpdate) {
         context.subscriptions.push(api.onDidClasspathUpdate(project => changed([project.toString()])))
     }
+}
+
+/** The exports of coc-java, activating it first when needed, undefined when coc-java is not installed. */
+async function javaExports<T>(): Promise<T | undefined> {
+    const java = extensions.getExtensionById<T>('coc-java')
+    let api: T | undefined = undefined
+    if (java?.isActive) {
+        api = java.exports
+    } else if (java) {
+        api = await java.activate()
+    }
+    return api
 }
 
 /** The events of coc-java's API about the projects of the workspace, each with the root uri of the projects. */
@@ -278,8 +298,7 @@ interface JavaEvents {
  * project has a spring-boot jar on its classpath, the condition jdtls's spring plugin starts it on.
  */
 async function startWhenJavaReady(start: () => Promise<void>, projects?: string[]): Promise<void> {
-    const java = extensions.getExtensionById<{ serverReady?: () => Promise<boolean> }>('coc-java')
-    const api = java ? (java.isActive ? java.exports : await java.activate()) : undefined
+    const api = await javaExports<{ serverReady?: () => Promise<boolean> }>()
     const ready: boolean = api?.serverReady ? await api.serverReady() : false
     if (ready && await hasBootProject(projects)) {
         logToSpringBootOutput('Starting the Spring Boot server after the java import')

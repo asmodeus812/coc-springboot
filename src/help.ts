@@ -1,5 +1,5 @@
-import * as path from 'path'
-import * as fs from 'fs'
+import * as path from 'node:path'
+import * as fs from 'node:fs'
 import { nvim, ExtensionContext } from 'coc.nvim'
 
 /**
@@ -14,6 +14,6 @@ export async function registerHelp(context: ExtensionContext): Promise<void> {
     await fs.promises.copyFile(path.join(context.extensionPath, 'doc', 'coc-springboot.txt'), path.join(doc, 'coc-springboot.txt'))
     await nvim.command(`silent! helptags ${await nvim.call('fnameescape', [doc])}`)
     // a single :set appends atomically; reading then writing the option would race with other extensions
-    const escaped = root.replace(/([ ,\\])/g, '\\$1')
+    const escaped = root.replace(/([ ,\\])/g, String.raw`\$1`)
     await nvim.command(`set runtimepath-=${escaped} runtimepath+=${escaped}`)
 }

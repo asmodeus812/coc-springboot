@@ -30,7 +30,7 @@ export function registerClasspathService(client: coc.LanguageClient, context: co
     });
 
     if (javaApi) {
-        coc.commands.executeCommand(CMD_STS_ENABLE_CLASSPATH_LISTENER, javaApi.serverMode === JDT_SERVER_STANDARD_MODE);
+        coc.commands.executeCommand(CMD_STS_ENABLE_CLASSPATH_LISTENER, javaApi.serverMode === JDT_SERVER_STANDARD_MODE).catch(() => undefined);
         context.subscriptions.push(javaApi.onDidServerModeChange(() => coc.commands.executeCommand(CMD_STS_ENABLE_CLASSPATH_LISTENER, javaApi.serverMode === JDT_SERVER_STANDARD_MODE)));
     }
 }

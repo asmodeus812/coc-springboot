@@ -46,7 +46,7 @@ async function liveHoverConnectHandler() {
     }))
 
     if (!items.length) {
-        window.showInformationMessage("No running Spring Boot Apps found")
+        void window.showInformationMessage("No running Spring Boot Apps found")
     } else {
         const chosen = await window.showQuickPick(items, {
             title: "Select action for running Spring Boot App",
@@ -63,7 +63,7 @@ export function whenStarted(client: LanguageClient, handler: () => Promise<void>
         if (client.getPublicState() === State.Running) {
             return handler()
         } else {
-            window.showErrorMessage("No Spring Boot project found. Action is only available for Spring Boot Projects")
+            void window.showErrorMessage("No Spring Boot project found. Action is only available for Spring Boot Projects")
         }
     }
 }
