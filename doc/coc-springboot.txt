@@ -78,8 +78,8 @@ shows in hovers, highlights and code lenses.
 
 To use it:
 1. Start the application, prepared as the README describes.
-2. Run |coc-springboot-command-springboot.live-hover.connect| and pick "Show
-   Live Data from: {app}".
+2. Run |coc-springboot-command-springboot.app.connect| and pick "Show
+   Live Data from: {app}". What it offers: |coc-springboot-apps|.
 3. Hover over the annotated code: `@Profile` shows the active profiles,
    `@Component`, `@Bean` and `@Autowired` the beans and their wiring,
    `@ConditionalOn...` the conditions and how they were evaluated. Links to
@@ -99,25 +99,44 @@ To change the log level of a logger in the running application, run
 |coc-springboot-command-springboot.set.log-levels|.
 
 ==============================================================================
+APPLICATIONS TO CONNECT                                *coc-springboot-apps*
+
+Live data needs a connection to the running application.
+|coc-springboot-command-springboot.app.connect| opens one picker that offers
+what can be connected; picking an item connects it. Two settings decide what
+the picker offers besides the applications already connected. Neither connects
+anything by itself.
+
+------------------------------------------------------------------------------
+APPLICATIONS ON THIS MACHINE                      *coc-springboot-local-apps*
+
+`boot-java.live-information.all-local-java-processes`, `false` by default.
+When `true`, each time the picker opens the language server lists every Java
+process running on this machine through the JDK attach API and offers them as
+"Show Live Data from: {process}". There is no scan in the background, and no
+process is connected until you pick it. When `false`, processes on this
+machine are not offered.
+
+Listing local processes needs the `jdk.attach` and `jdk.management` modules
+in the Java that runs the language server: a full JDK has them, a bare runtime
+may not. Without them the extension warns at startup, and local processes are
+not offered.
+
+------------------------------------------------------------------------------
 REMOTE APPLICATIONS                               *coc-springboot-remote-apps*
 
-Applications running on this machine need no entry here. The language server
-finds them through Java's attach API when
-`boot-java.live-information.all-local-java-processes` is `true`, and only
-then.
-
-An application the server reaches through a URL instead (on another machine,
+An application the language server reaches through a URL (on another machine,
 in a container, behind a forwarded port) is listed in the setting
 `boot-java.remote-apps`, one object per application: >
     "boot-java.remote-apps": [
         {
-            "jmxurl": "service:jmx:rmi:///jndi/rmi://localhost:9010/jmxrmi",
-            "host": "localhost"
+            "jmxurl": "service:jmx:rmi:///jndi/rmi://<host>:9010/jmxrmi",
+            "host": "<host>"
         }
     ]
 <
-This is the default: one application whose JMX port is reachable as
-`localhost:9010`.
+The example lists one application whose JMX port is reachable as
+`<host>:9010`. The setting is empty by default.
 
 The fields:
 - `jmxurl`: how the server reaches the application. An address that starts
@@ -129,13 +148,16 @@ The fields:
   application, for example `http` and `8080`. They do not affect the
   connection. Without `port`, the port the application reports is used.
 
-The server never connects these applications by itself. Connect one with
-|coc-springboot-command-springboot.live-hover.connect|, which lists it as
-"Show Live Data from: remote process - {host}". A connect that fails is
-retried `boot-java.live-information.fetch-data.max-retries` times (10), every
+The picker offers each entry as "Show Live Data from: remote process -
+{host}". The language server never connects an entry by itself, not even when
+you add it to the list: only picking it connects it. Removing an entry from
+the list closes its connection.
+
+A connect that fails is retried
+`boot-java.live-information.fetch-data.max-retries` times (10), every
 `boot-java.live-information.fetch-data.retry-delay-in-seconds` seconds (3);
-then the server gives up, and the application can be connected again from
-the same command.
+then the server gives up, and the application can be connected again from the
+same command.
 
 What the application needs, given to its JVM when it starts:
 - JMX on port 9010: >
@@ -256,14 +278,26 @@ Both commands show the error "No Spring Boot project found. Action is only
 available for Spring Boot Projects" when the server is not running, and "No
 running Spring Boot Apps found" when no application is running.
 
-                        *coc-springboot-command-springboot.live-hover.connect*
-:CocCommand springboot.live-hover.connect
-Shows, refreshes or hides the live data of a running Spring Boot application.
-Searches for running applications ("Searching for running Spring Boot
-Apps...") and opens the picker "Select action for running Spring Boot App".
-Each item reads `Show Live Data from: {app}`, `Refresh Live Data from: {app}`
-or `Hide Live Data from: {app}`, depending on whether the application is
-connected, with the project name as description.
+                              *coc-springboot-command-springboot.app.connect*
+:CocCommand springboot.app.connect
+Connects to a running Spring Boot application to show its live data,
+refreshes that data, or disconnects to hide it. It asks the language server
+what can be done ("Searching for running Spring Boot Apps...") and opens the
+picker "Select action for running Spring Boot App"; each item shows its
+project name. The items come from three sources:
+- the applications already connected, however they were connected (this
+  picker, or another extension through the language server), each as
+  `Refresh Live Data from: {app}` and `Hide Live Data from: {app}`;
+- the entries of `boot-java.remote-apps` that are not connected, as
+  `Show Live Data from: remote process - {host}`
+  (|coc-springboot-remote-apps|);
+- when `boot-java.live-information.all-local-java-processes` is `true`, every
+  Java process running on this machine that is not connected, as
+  `Show Live Data from: {process}` (|coc-springboot-local-apps|).
+The list is built anew each time the command runs; picking an item does what
+it says. With nothing to offer it shows "No running Spring Boot Apps found";
+when the server is not running, "No Spring Boot project found. Action is only
+available for Spring Boot Projects".
 
                             *coc-springboot-command-springboot.set.log-levels*
 :CocCommand springboot.set.log-levels

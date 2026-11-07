@@ -69,7 +69,7 @@
                 "title": "Refresh Modulith Metadata"
             },
             {
-                "command": "springboot.live-hover.connect",
+                "command": "springboot.app.connect",
                 "title": "Show/Refresh/Hide Live Data from Spring Boot Processes"
             },
             {
@@ -103,8 +103,8 @@
                     },
                     "boot-java.live-information.all-local-java-processes": {
                         "type": "boolean",
-                        "description": "Show all local JVM processes when connecting to Live Spring Boot App processes",
-                        "default": false
+                        "default": false,
+                        "markdownDescription": "Offer every Java process running on this machine in `springboot.app.connect`, found through the JDK attach API each time the picker opens. Nothing is connected by itself: picking a process connects it. Needs the `jdk.attach` and `jdk.management` modules (a full JDK) in the Java that runs the language server. See `:help coc-springboot-local-apps`."
                     },
                     "boot-java.live-information.fetch-data.max-retries": {
                         "type": "number",
@@ -195,12 +195,7 @@
                     },
                     "boot-java.remote-apps": {
                         "type": "array",
-                        "default": [
-                            {
-                                "jmxurl": "service:jmx:rmi:///jndi/rmi://localhost:9010/jmxrmi",
-                                "host": "localhost"
-                            }
-                        ],
+                        "default": [],
                         "items": {
                             "type": "object",
                             "properties": {
@@ -229,7 +224,7 @@
                                 "host"
                             ]
                         },
-                        "markdownDescription": "Spring Boot applications the language server reaches through a URL (on another machine, in a container, behind a forwarded port) to read live data from, one object per application. They are never connected automatically: connect one with `springboot.live-hover.connect`. The default lists one application on `localhost:9010`. Applications on this machine need no entry (see `boot-java.live-information.all-local-java-processes`). See `:help coc-springboot-remote-apps`."
+                        "markdownDescription": "Spring Boot applications the language server reaches through a URL (on another machine, in a container, behind a forwarded port), one object per application, offered in `springboot.app.connect` as `remote process - {host}`. Nothing is connected by itself: picking an application connects it, and removing it from the list closes its connection. Applications on this machine need no entry (see `boot-java.live-information.all-local-java-processes`). See `:help coc-springboot-remote-apps`."
                     },
                     "boot-java.modulith-project-tracking": {
                         "type": "boolean",

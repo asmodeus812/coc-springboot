@@ -76,7 +76,7 @@ application with:
 ```
 
 The last argument also exposes the server port, which the request mapping links use. Local
-applications are only found when the server may scan all local Java processes:
+applications appear in the `springboot.app.connect` picker only with:
 
 ```json
 {
@@ -117,11 +117,13 @@ keys under `spring-boot.ls` and `boot-java.ai` that the extension reads when it 
 
 | Key | Type | Default | Effect |
 |---|---|---|---|
-| `boot-java.live-information.all-local-java-processes` | boolean | `false` | Look at all local Java processes for Spring Boot applications. Needed to find local applications (see [Preparing an application for live data](#preparing-an-application-for-live-data)). |
+| `boot-java.live-information.all-local-java-processes` | boolean | `false` | Offer every Java process running on this machine in `springboot.app.connect`, found through the JDK attach API each time the picker opens; picking one connects it. Needs the `jdk.attach` and `jdk.management` modules (a full JDK) in the Java that runs the language server. See `:help coc-springboot-local-apps`. |
 | `boot-java.live-information.fetch-data.max-retries` | number | `10` | How often the server retries fetching live data before it gives up. |
 | `boot-java.live-information.fetch-data.retry-delay-in-seconds` | number | `3` | Seconds between those retries. |
-| `boot-java.remote-apps` | array | one application on `localhost:9010` | Spring Boot applications the language server reaches through a URL (on another machine, in a container, behind a forwarded port), one object per application: `jmxurl` (an `http` address reads the actuator over HTTP, anything else is a JMX URL) and `host` are required, `urlScheme` and `port` (the links only) are optional. They are never connected automatically: connect one with `springboot.live-hover.connect`. See `:help coc-springboot-remote-apps`. |
+| `boot-java.remote-apps` | array | `[]` | Spring Boot applications the language server reaches through a URL (on another machine, in a container, behind a forwarded port), one object per application: `jmxurl` (an `http` address reads the actuator over HTTP, anything else is a JMX URL) and `host` are required, `urlScheme` and `port` (the links only) are optional. Offered in `springboot.app.connect`; picking one connects it, removing it from the list closes its connection. See `:help coc-springboot-remote-apps`. |
 | `boot-java.highlight-codelens.on` | boolean | `true` | Show the live data code lenses. A change applies at once. |
+
+An example `boot-java.remote-apps` entry, an application whose JMX port is reachable as `localhost:9010` (for example a forwarded port); the setting is empty by default:
 
 ```json
 {
@@ -404,7 +406,7 @@ The extension stores nothing else.
   configuration files": your coc.nvim is too old to let configuration files keep their filetype,
   so the extension sets the Spring filetypes on them about 10 seconds after the start. Update
   coc.nvim.
-- No local application in the live data picker: set
+- No local application in the `springboot.app.connect` picker: set
   `boot-java.live-information.all-local-java-processes` and start the application with the JMX
   arguments of [Preparing an application for live data](#preparing-an-application-for-live-data).
 - A change under `spring-boot.ls` or `boot-java.ai` has no effect: run `:CocRestart`.

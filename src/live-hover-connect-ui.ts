@@ -70,6 +70,6 @@ export function whenStarted(client: LanguageClient, handler: () => Promise<void>
 
 export function activate(client: LanguageClient, context: ExtensionContext) {
     context.subscriptions.push(
-        commands.registerCommand('springboot.live-hover.connect', whenStarted(client, liveHoverConnectHandler)),
+        commands.registerCommand('springboot.app.connect', whenStarted(client, liveHoverConnectHandler)),
     )
 }
