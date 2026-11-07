@@ -1,6 +1,6 @@
 {
     "name": "coc-springboot",
-    "version": "0.2.4",
+    "version": "0.2.5",
     "description": "Coc spring boot language server extension client",
     "license": "GPL-3.0-only",
     "main": "lib/index.js",
