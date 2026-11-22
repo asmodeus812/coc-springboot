@@ -1,0 +1,15 @@
+coc-springboot is a port of the Spring Boot extension of Spring Tools
+(vscode-spring-boot, https://github.com/spring-projects/sts4) to coc.nvim.
+
+Spring Tools: Copyright (c) Pivotal Software, Inc., VMware, Inc. and other contributors,
+made available under the Eclipse Public License v1.0.
+
+The Spring Boot language server (language-server/) and the JDT language server extensions (jars/) bundled with
+this extension are built by the Spring Tools project and distributed unmodified under the Eclipse Public License
+v1.0. Their source code is available at https://github.com/spring-projects/sts4. The libraries embedded in the
+language server are listed in META-INF/third-party-open-source-licenses.txt inside its jar.
+
+The coc.nvim port and its changes: Copyright (c) 2024-2026 Svetlozar Iliev, distributed under the same
+Eclipse Public License v1.0, see LICENSE.
+
+The npm packages bundled into lib/index.js are listed with their licenses in THIRD_PARTY_NOTICES.txt.

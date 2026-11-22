@@ -451,4 +451,7 @@ Issues and pull requests are welcome at <https://github.com/asmodeus812/coc-spri
 
 ## License
 
-GNU General Public License, version 3 only (`GPL-3.0-only`); the full text is in `LICENSE`.
+coc-springboot is a port of the Spring Boot extension of [Spring Tools](https://github.com/spring-projects/sts4)
+to coc.nvim. Like the original it is licensed under the Eclipse Public License v1.0 (`EPL-1.0`), see `LICENSE`. The
+bundled language server and JDT extensions are the Spring Tools ones, unmodified, under the same license; `NOTICE`
+says where their source is. The npm packages bundled into `lib/index.js` are listed in `THIRD_PARTY_NOTICES.txt`.
